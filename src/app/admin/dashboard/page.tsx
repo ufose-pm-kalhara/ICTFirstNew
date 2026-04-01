@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Plus,Calendar, Users, CreditCard, History  } from 'lucide-react';
 
 interface Student {
   id: number;
@@ -22,6 +23,24 @@ export default function AdminDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [payments, setPayments] = useState<Payment[]>([]);
+
+  const now = new Date();
+  const currentMonth = now.getMonth(); 
+  const currentYear = now.getFullYear();
+
+  const thisMonthNewStudents = students.filter(s => {
+  const date = new Date(s.created_at);
+  return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  }).length;     
+  
+  const totalStudentsUntilLastMonth = students.length - thisMonthNewStudents;
+
+  let percentageChange = 0;
+  if (totalStudentsUntilLastMonth > 0) {
+    percentageChange = (thisMonthNewStudents / totalStudentsUntilLastMonth) * 100;
+  }
+
+  const formattedPercentage = (percentageChange >= 0 ? "+" : "") + percentageChange.toFixed(0) + "%";
 
   useEffect(() => {
     // Setting the current date for the dashboard header
@@ -58,12 +77,13 @@ export default function AdminDashboard() {
             <h1 className="text-[30px] font-bold leading-[36px] tracking-[-0.75px] text-[#003D63]">Dashboard Overview</h1>
 
             {/* Welcome msg */}
-            <p className="text-[16px] font-medium leading-[24px] tracking-[0px] text-gray-500 mt-1">Welcome back, Mrs. Kalugampitiya. Here's what's happening today.</p>
+            <p className="text-[18px] font-medium leading-[24px] tracking-[0px] text-gray-500 mt-1">Welcome back, Mrs. Kalugampitiya. Here's what's happening today.</p>
 
           </div>
 
           {/* Calander */}
-          <div className="flex flex-row items-center font-semi-bold text-[#2B6390] bg-[#E3EEF9] rounded-[0.8rem] pt-2 pb-2 pl-6 pr-6">
+          <div className="flex flex-row  gap-x-3 items-center font-semi-bold text-[#2B6390] bg-[#E3EEF9] rounded-[0.8rem] pt-2 pb-2 pl-6 pr-6">
+            <Calendar size={16} strokeWidth={3} className="text-[#2B6390]" />
             {formattedDate}
           </div>
         </div>
@@ -77,7 +97,10 @@ export default function AdminDashboard() {
     {/* Card 1: Pending Payments */}
     <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-50 flex flex-col justify-between h-52 relative overflow-hidden">
       <div className="flex justify-between items-start">
-        <div className="w-12 h-12 bg-[#FFFBEB] rounded-2xl flex items-center justify-center text-orange-500 text-xl font-bold"></div>
+        <div className="w-12 h-12 bg-[#FFFBEB] rounded-2xl flex items-center justify-center text-orange-500 text-xl font-bold">
+          <CreditCard size={32} strokeWidth={3} className="text-[#D97706]" />
+          
+        </div>
         <span className="text-[10px] font-black px-2 py-1 rounded bg-[#FFFBEB] text-[#D97706] ">Active</span>
       </div>
       <div>
@@ -94,11 +117,13 @@ export default function AdminDashboard() {
     {/* Card 2: Total Students */}
     <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-50 flex flex-col justify-between h-52 relative overflow-hidden">
       <div className="flex justify-between items-start">
-        <div className="w-12 h-12 bg-[#F0FDF4] rounded-2xl flex items-center justify-center text-blue-500 text-xl"></div>
+        <div className="w-12 h-12 bg-[#F0FDF4] rounded-2xl flex items-center justify-center text-blue-500 text-xl">
+          <Users size={30} strokeWidth={3} className="text-[#2B6390]" />
+        </div>
         <span className="text-[10px] font-black px-2 py-1 rounded bg-[#F0FDF4] text-[#16A34A] ">
           
           {/* Rate-want to implement??????????? */}
-          +12%
+          {formattedPercentage}
           
         </span>
       </div>
@@ -122,9 +147,9 @@ export default function AdminDashboard() {
     <div className="relative z-10">
       
       {/* NEW STUDENT BUTTON: Based on Figma image_ac2d2a.png */}
-      <button className="flex flex-col items-center justify-center w-[83px] h-[69.67px] bg-white/10 rounded-[8px] p-[12px] gap-[4px] border border-white/20 transition-all cursor-pointer hover:bg-white/20 group">
+      <button className="flex flex-col items-center justify-center w-[90px] h-[90px] bg-white/10 rounded-[8px] p-[12px] gap-[4px] border border-white/20 transition-all cursor-pointer hover:bg-white/20 group">
         {/* Plus Icon */}
-        <span className="text-xl font-light text-white leading-none">+</span>
+        <Plus size={25} className="text-[#F6F9FF]" />
         
         {/* Button Text */}
         <div className="flex flex-col items-center">
@@ -166,7 +191,9 @@ export default function AdminDashboard() {
                <h3 className="text-[16px] font-bold leading-[24px] text-[#2D3335]">Recent Activity</h3>
 
               {/*  */}
-               <div className="w-3 h-4 font-bold text-[#CBD5E1]">↺</div>
+               <div className="w-3 h-4 font-bold text-[#CBD5E1]">
+                <History />
+               </div>
             </div>
             <div className="space-y-8 relative before:absolute before:left-5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-50">
               
