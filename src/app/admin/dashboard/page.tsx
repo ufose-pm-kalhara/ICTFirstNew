@@ -95,7 +95,7 @@ export default function AdminDashboard() {
   <div className="flex flex-col gap-6">
     
     {/* Card 1: Pending Payments */}
-    <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-50 flex flex-col justify-between h-52 relative overflow-hidden">
+    <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-50 flex flex-col justify-between h-52 relative overflow-hidden hover:shadow-2xl hover:-translate-y-1">
       <div className="flex justify-between items-start">
         <div className="w-12 h-12 bg-[#FFFBEB] rounded-2xl flex items-center justify-center text-orange-500 text-xl font-bold">
           <CreditCard size={32} strokeWidth={3} className="text-[#D97706]" />
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
     </div>
 
     {/* Card 2: Total Students */}
-    <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-50 flex flex-col justify-between h-52 relative overflow-hidden">
+    <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-50 flex flex-col justify-between h-52 relative overflow-hidden hover:shadow-2xl hover:-translate-y-1">
       <div className="flex justify-between items-start">
         <div className="w-12 h-12 bg-[#F0FDF4] rounded-2xl flex items-center justify-center text-blue-500 text-xl">
           <Users size={30} strokeWidth={3} className="text-[#2B6390]" />
@@ -136,7 +136,7 @@ export default function AdminDashboard() {
   </div>
 
   {/* SECOND COLUMN: Quick Actions (Full Height) */}
-  <div className="bg-[#2B6390] p-8 rounded-[2.5rem] text-white flex flex-col justify-start items-start shadow-xl text-center relative overflow-hidden h-full min-h-[440px]">
+  <div className="bg-[#2B6390] p-8 rounded-[2.5rem] text-white flex flex-col justify-start items-start shadow-xl text-center relative overflow-hidden h-full min-h-[440px]  hover:shadow-2xl hover:-translate-y-1">
     
     {/* Background Decorative Circle */}
     <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full"></div>
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* Critical Pending Payments */}
-          <div className="bg-white p-8 rounded-[2.5rem] border border-gray-50 shadow-sm">
+          <div className="bg-white p-8 rounded-[2.5rem] border border-gray-50 shadow-sm hover:shadow-2xl hover:-translate-y-1">
             <div className="flex justify-between items-center mb-8">
 
               <h3 className="text-[16px] font-bold leading-[24px] text-[#2D3335]">Critical Pending Payments</h3>
@@ -185,7 +185,7 @@ export default function AdminDashboard() {
           </div>
 
           {/*Recent Activity */}
-          <div className="bg-white p-8 rounded-[2.5rem] border border-gray-50 shadow-sm">
+          <div className="bg-white p-8 rounded-[2.5rem] border border-gray-50 shadow-sm hover:shadow-2xl hover:-translate-y-1">
             <div className="flex justify-between items-center mb-8">
 
                <h3 className="text-[16px] font-bold leading-[24px] text-[#2D3335]">Recent Activity</h3>
