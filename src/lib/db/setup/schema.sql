@@ -151,3 +151,5 @@ ADD COLUMN grade INT NOT NULL,
 ADD COLUMN material_id INT NULL; -- Links to the material you upload
 
 ALTER TABLE recorded_lessons ADD COLUMN reset_token INT DEFAULT 0;
+
+ALTER TABLE payments ADD COLUMN billing_month VARCHAR(20) AFTER amount;

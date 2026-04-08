@@ -26,6 +26,7 @@ export default function LessonsPage() {
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [paymentStatus, setPaymentStatus] = useState<string>('no_history');
+  const [showPendingModal, setShowPendingModal] = useState<boolean>(false); // ✅ Modal State
 
   // 1. Fetch Lessons, Payments & Sync Bookmarks
   const initData = useCallback(async () => {
@@ -40,7 +41,6 @@ export default function LessonsPage() {
 
       if (lessonsData.success) setLessons(lessonsData.lessons as Lesson[]);
       
-      // Update payment status from the most recent record
       if (payData.success && payData.payments?.length > 0) {
         setPaymentStatus(payData.payments[0].status);
       }
@@ -62,6 +62,15 @@ export default function LessonsPage() {
 
   // Master Access Check
   const hasAccess = paymentStatus === 'approved';
+  const isPending = paymentStatus === 'pending';
+
+  // ✅ Intercept clicks for pending users
+  const handleLessonClick = (e: React.MouseEvent) => {
+    if (isPending) {
+      e.preventDefault();
+      setShowPendingModal(true);
+    }
+  };
 
   // 2. Bookmark Logic
   const toggleBookmark = (id: number) => {
@@ -96,7 +105,46 @@ export default function LessonsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-20 font-sans select-none">
+    <div className="min-h-screen bg-[#FDFDFD] pb-20 font-sans select-none relative">
+      
+      {/* ✅ Verification Pending Modal */}
+      {showPendingModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-6">
+          <div className="bg-white rounded-[3rem] p-10 max-w-lg w-full shadow-2xl border border-blue-50 animate-in fade-in zoom-in duration-300">
+            <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-3xl flex items-center justify-center mb-8 rotate-3">
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            
+            <h3 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter mb-4">Under Review</h3>
+            
+            <div className="space-y-4 mb-8">
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Target Content</p>
+                <p className="text-sm font-bold text-slate-700">ICT Grade {selectedGrade} Academic Modules</p>
+              </div>
+              
+              <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">What happens next?</p>
+                <p className="text-sm font-bold text-[#1A5683]">We are verifying your payment slip. Once approved, all &quot;Locked&quot; icons will change to &quot;Play&quot; icons automatically.</p>
+              </div>
+
+              <p className="text-xs text-slate-400 font-medium leading-relaxed px-2">
+                Verification is typically completed within 24 hours. Thank you for your patience.
+              </p>
+            </div>
+
+            <button 
+              onClick={() => setShowPendingModal(false)}
+              className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl text-xs uppercase tracking-[0.2em] hover:bg-[#1A5683] transition-all"
+            >
+              Continue Browsing
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
         
         {/* HERO SECTION */}
@@ -195,9 +243,10 @@ export default function LessonsPage() {
                   ) : (
                     <Link 
                       href="/student/payments"
+                      onClick={handleLessonClick} // ✅ Modal Trigger
                       className="w-full py-4 bg-orange-100 text-orange-600 rounded-2xl text-[9px] font-black uppercase tracking-widest text-center hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center gap-2"
                     >
-                      {paymentStatus === 'pending' ? 'Verifying Slip...' : 'Unlock Lesson 🔒'}
+                      {isPending ? 'Verifying Slip...' : 'Unlock Lesson 🔒'}
                     </Link>
                   )}
                   

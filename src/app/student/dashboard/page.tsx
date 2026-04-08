@@ -22,6 +22,7 @@ export default function StudentDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [showPendingModal, setShowPendingModal] = useState(false); // ✅ Added Modal State
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -41,7 +42,6 @@ export default function StudentDashboard() {
             full_name: profile.student.full_name,
             student_id: profile.student.student_id,
             grade: profile.student.grade,
-            // Check the status of the most recent payment
             paymentStatus: payments.payments?.[0]?.status || 'no_history'
           });
         }
@@ -64,11 +64,58 @@ export default function StudentDashboard() {
     </div>
   );
 
-  // Helper to check if the user has full access
   const hasAccess = data?.paymentStatus === 'approved';
+  const isPending = data?.paymentStatus === 'pending';
+
+  // ✅ Handle Locked Button Clicks
+  const handleLockedClick = (e: React.MouseEvent) => {
+    if (isPending) {
+      e.preventDefault();
+      setShowPendingModal(true);
+    }
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-8 py-12 select-none">
+    <div className="max-w-7xl mx-auto px-8 py-12 select-none relative">
+      
+      {/* ✅ Verification Pending Modal */}
+      {showPendingModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-6">
+          <div className="bg-white rounded-[3rem] p-10 max-w-lg w-full shadow-2xl border border-blue-50 animate-in fade-in zoom-in duration-300">
+            <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-3xl flex items-center justify-center mb-8 rotate-3">
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            
+            <h3 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter mb-4">Verification In Progress</h3>
+            
+            <div className="space-y-4 mb-8">
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Course Content</p>
+                <p className="text-sm font-bold text-slate-700">ICT Grade {data?.grade} - Full Academic Module</p>
+              </div>
+              
+              <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Status Update</p>
+                <p className="text-sm font-bold text-[#1A5683]">Our finance team is auditing your bank slip. This usually takes 24 business hours.</p>
+              </div>
+
+              <p className="text-xs text-slate-400 font-medium leading-relaxed px-2">
+                Once verified, all video sessions, PDF materials, and the Live Workshop link will unlock automatically for your account.
+              </p>
+            </div>
+
+            <button 
+              onClick={() => setShowPendingModal(false)}
+              className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl text-xs uppercase tracking-[0.2em] hover:bg-[#1A5683] transition-all"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Hero Welcome */}
       <div className="p-4 mb-8 relative overflow-hidden">
         <div className="relative z-10">
@@ -82,7 +129,7 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Live Class & Instructor Note Banner */}
+      {/* Live Class Banner */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
         <div className="lg:col-span-2 bg-[#1A5683] rounded-[2.5rem] p-10 text-white flex flex-col justify-between shadow-xl shadow-blue-100/50 min-h-[320px]">
           <div>
@@ -96,8 +143,12 @@ export default function StudentDashboard() {
                 Join Live Class
              </button>
           ) : (
-            <Link href="/student/payments" className="bg-orange-500 text-white w-fit px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform active:scale-95 shadow-lg">
-                Unlock Live Access →
+            <Link 
+              href="/student/payments" 
+              onClick={handleLockedClick} // ✅ Modal Trigger
+              className={`${isPending ? 'bg-orange-500' : 'bg-orange-500'} text-white w-fit px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform active:scale-95 shadow-lg`}
+            >
+                {isPending ? 'Verification Pending...' : 'Unlock Live Access →'}
             </Link>
           )}
         </div>
@@ -114,7 +165,6 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Dynamic Lessons Container */}
       <div className="mb-8 flex items-center justify-between">
          <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Recent Sessions & Materials</h2>
       </div>
@@ -134,16 +184,13 @@ export default function StudentDashboard() {
                     <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest italic">
                     {lesson.video_url ? 'Video Session' : 'Lecture Note'}
                     </p>
-                    {/* Access Indicator Badge */}
                     {!hasAccess && (
                         <span className="text-[8px] bg-red-50 text-red-500 px-2 py-0.5 rounded font-black uppercase tracking-tighter italic">Locked</span>
                     )}
                 </div>
               </div>
 
-              {/* DYNAMIC BUTTON LOGIC */}
               {hasAccess ? (
-                // IF APPROVED: Show Video or PDF
                 lesson.video_url ? (
                   <Link href={`/student/lessons/${lesson.id}`} className="w-full py-3 bg-[#1A5683] text-white rounded-xl text-[9px] font-black uppercase tracking-widest text-center transition-all hover:bg-slate-900">
                     Stream Video →
@@ -154,9 +201,12 @@ export default function StudentDashboard() {
                   </a>
                 )
               ) : (
-                // IF NOT APPROVED (Pending or No History): Show Payment Button
-                <Link href="/student/payments" className="w-full py-3 bg-slate-100 text-slate-400 rounded-xl text-[9px] font-black uppercase tracking-widest text-center hover:bg-orange-100 hover:text-orange-600 transition-colors">
-                  {data?.paymentStatus === 'pending' ? 'Verification Pending...' : 'Unlock Lessons 🔒'}
+                <Link 
+                  href="/student/payments" 
+                  onClick={handleLockedClick} // ✅ Modal Trigger
+                  className="w-full py-3 bg-slate-100 text-slate-400 rounded-xl text-[9px] font-black uppercase tracking-widest text-center hover:bg-orange-100 hover:text-orange-600 transition-colors"
+                >
+                  {isPending ? 'Verification Pending...' : 'Unlock Lessons 🔒'}
                 </Link>
               )}
             </div>

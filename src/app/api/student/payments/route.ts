@@ -35,15 +35,16 @@ export async function POST(req: Request) {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback_secret_for_dev');
     const { payload } = await jwtVerify(token, secret);
 
-    const { amount, proof_url } = await req.json();
+    const { amount, proof_url, billing_month } = await req.json();
 
     await pool.query(
-      'INSERT INTO payments (student_id, amount, proof_url, status) VALUES (?, ?, ?, "pending")',
-      [payload.id, amount, proof_url]
+      'INSERT INTO payments (student_id, amount, proof_url, billing_month, status) VALUES (?, ?, ?, ?, "pending")',
+      [payload.id, amount, proof_url, billing_month]
     );
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error("Database Error:", error);
     return NextResponse.json({ success: false }, { status: 500 });
   }
-}
+} 
