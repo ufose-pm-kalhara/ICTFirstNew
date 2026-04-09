@@ -1,34 +1,42 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation'; // ✅ Import router
+import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // 1. Define the Payment Interface
 interface Payment {
   id: number;
   amount: number;
   status: 'pending' | 'approved' | 'rejected';
+  lesson_id?: string; // ✅ Track which lesson this is for
   created_at: string;
 }
 
-export default function PaymentsPage() {
-  const router = useRouter(); // ✅ Initialize router
+function PaymentsContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams(); // ✅ Get lessonId from URL
+  
   const [payments, setPayments] = useState<Payment[]>([]);
   const [amount, setAmount] = useState<string>('');
   const [billingMonth, setBillingMonth] = useState<string>('');
+  const [lessonId, setLessonId] = useState<string | null>(null); // ✅ New State
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
 
-  // ✅ Auto-select current month
+  // ✅ Auto-select current month and detect Lesson ID from URL
   useEffect(() => {
     const months = [
       "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"
     ];
     setBillingMonth(months[new Date().getMonth()]);
-  }, []);
+
+    // If you link to this page like /payments?lessonId=math-101
+    const id = searchParams.get('lessonId');
+    if (id) setLessonId(id);
+  }, [searchParams]);
 
   const fetchPayments = useCallback(async () => {
     try {
@@ -74,7 +82,8 @@ export default function PaymentsPage() {
         body: JSON.stringify({ 
           amount: parseFloat(amount), 
           proof_url: image, 
-          billing_month: billingMonth 
+          billing_month: billingMonth,
+          lesson_id: lessonId // ✅ Now sending the specific lesson ID
         }),
       });
 
@@ -115,9 +124,9 @@ export default function PaymentsPage() {
               </svg>
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Payment Received!</h3>
-            <p className="text-gray-500 mb-8">Your payment slip has been uploaded successfully and is now under review.</p>
+            <p className="text-gray-500 mb-8">Your payment slip for {billingMonth} has been uploaded successfully and is now under review.</p>
             <button 
-              onClick={() => router.push('/student/lessons')} // ✅ Navigates to lessons
+              onClick={() => router.push('/student/lessons')} 
               className="w-full py-4 bg-[#2B6390] text-white font-bold rounded-xl hover:bg-[#1A5783] transition-colors"
             >
               Go to Lessons
@@ -144,6 +153,13 @@ export default function PaymentsPage() {
               Billing Details
             </h2>
           </div>
+
+          {/* ✅ Hidden Lesson Identifier */}
+          {lessonId && (
+            <div className="mb-4 px-4 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs font-bold text-[#2B6390] uppercase tracking-wider">
+              Paying for Lesson ID: {lessonId}
+            </div>
+          )}
 
           <label className="text-sm text-gray-500">
             Select Billing Month
@@ -255,7 +271,6 @@ export default function PaymentsPage() {
         Submit Payment</button>
       </div>
 
-      {/* Rest of the UI (Notes, Verification Process, etc.) remains unchanged */}
       <div className="lg:col-span-4 space-y-6">
         <div className="relative bg-[#C6C1F2] p-8  overflow-hidden shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] rounded-tl-xl rounded-tr-[40px] rounded-bl-xl rounded-br-xl">
           <div className="absolute bottom-0 right-0 opacity-10 rotate-180 rotate-[165deg] translate-x-7 translate-y-8 pointer-events-none">
@@ -385,5 +400,14 @@ export default function PaymentsPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+// ✅ Main Export with Suspense
+export default function PaymentsPage() {
+  return (
+    <Suspense fallback={<div className="p-20 text-center font-black text-[#1A5683] animate-pulse uppercase tracking-widest">Loading...</div>}>
+      <PaymentsContent />
+    </Suspense>
   );
 }

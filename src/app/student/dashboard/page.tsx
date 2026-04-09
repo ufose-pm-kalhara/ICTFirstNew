@@ -7,7 +7,6 @@ interface DashboardData {
   full_name: string;
   student_id: string;
   grade: number;
-  paymentStatus?: string; // 'approved', 'pending', or 'no_history'
 }
 
 interface Lesson {
@@ -18,11 +17,18 @@ interface Lesson {
   notes: string | null;
 }
 
+interface PaymentRecord {
+  status: string;
+  lesson_id: number | null;
+}
+
 export default function StudentDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [showPendingModal, setShowPendingModal] = useState(false); // ✅ Added Modal State
+  const [paymentMap, setPaymentMap] = useState<Record<number, string>>({}); // ✅ Tracks status per lesson ID
+  const [generalStatus, setGeneralStatus] = useState<string>('no_history'); // ✅ Tracks payments without lesson IDs
+  const [showPendingModal, setShowPendingModal] = useState(false);
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -34,7 +40,7 @@ export default function StudentDashboard() {
         ]);
 
         const profile = await profileRes.json();
-        const payments = await payRes.json();
+        const paymentsData = await payRes.json();
         const lessonsData = await lessonsRes.json();
 
         if (profile.success) {
@@ -42,8 +48,25 @@ export default function StudentDashboard() {
             full_name: profile.student.full_name,
             student_id: profile.student.student_id,
             grade: profile.student.grade,
-            paymentStatus: payments.payments?.[0]?.status || 'no_history'
           });
+        }
+
+        // ✅ Process Payments into a Map
+        if (paymentsData.success && paymentsData.payments) {
+          const mapping: Record<number, string> = {};
+          let latestGeneral = 'no_history';
+
+          paymentsData.payments.forEach((p: PaymentRecord) => {
+            if (p.lesson_id) {
+              // Only keep the latest status for a specific lesson
+              if (!mapping[p.lesson_id]) mapping[p.lesson_id] = p.status;
+            } else {
+              // If no lesson_id, it's a general payment
+              if (latestGeneral === 'no_history') latestGeneral = p.status;
+            }
+          });
+          setPaymentMap(mapping);
+          setGeneralStatus(latestGeneral);
         }
 
         if (lessonsData.success) {
@@ -64,12 +87,16 @@ export default function StudentDashboard() {
     </div>
   );
 
-  const hasAccess = data?.paymentStatus === 'approved';
-  const isPending = data?.paymentStatus === 'pending';
+  // ✅ Helper to check access for a specific lesson
+  const getLessonStatus = (lessonId: number) => {
+    // If general account is approved, everything is unlocked
+    if (generalStatus === 'approved') return 'approved';
+    // Otherwise, return the specific status for this lesson
+    return paymentMap[lessonId] || 'no_history';
+  };
 
-  // ✅ Handle Locked Button Clicks
-  const handleLockedClick = (e: React.MouseEvent) => {
-    if (isPending) {
+  const handleLockedClick = (status: string, e: React.MouseEvent) => {
+    if (status === 'pending') {
       e.preventDefault();
       setShowPendingModal(true);
     }
@@ -78,7 +105,7 @@ export default function StudentDashboard() {
   return (
     <div className="max-w-7xl mx-auto px-8 py-12 select-none relative">
       
-      {/* ✅ Verification Pending Modal */}
+      {/* Verification Pending Modal */}
       {showPendingModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-6">
           <div className="bg-white rounded-[3rem] p-10 max-w-lg w-full shadow-2xl border border-blue-50 animate-in fade-in zoom-in duration-300">
@@ -93,17 +120,13 @@ export default function StudentDashboard() {
             <div className="space-y-4 mb-8">
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Course Content</p>
-                <p className="text-sm font-bold text-slate-700">ICT Grade {data?.grade} - Full Academic Module</p>
+                <p className="text-sm font-bold text-slate-700">ICT Grade {data?.grade} - Lesson Module</p>
               </div>
               
               <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
                 <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Status Update</p>
                 <p className="text-sm font-bold text-[#1A5683]">Our finance team is auditing your bank slip. This usually takes 24 business hours.</p>
               </div>
-
-              <p className="text-xs text-slate-400 font-medium leading-relaxed px-2">
-                Once verified, all video sessions, PDF materials, and the Live Workshop link will unlock automatically for your account.
-              </p>
             </div>
 
             <button 
@@ -138,17 +161,17 @@ export default function StudentDashboard() {
             <p className="text-blue-100 font-bold uppercase text-[10px] mt-4 tracking-widest italic opacity-80">with Mrs. Dinushika Kalugampitiya</p>
           </div>
           
-          {hasAccess ? (
+          {generalStatus === 'approved' ? (
              <button className="bg-white text-[#1A5683] w-fit px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-black/10">
                 Join Live Class
              </button>
           ) : (
             <Link 
               href="/student/payments" 
-              onClick={handleLockedClick} // ✅ Modal Trigger
-              className={`${isPending ? 'bg-orange-500' : 'bg-orange-500'} text-white w-fit px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform active:scale-95 shadow-lg`}
+              onClick={(e) => handleLockedClick(generalStatus, e)}
+              className="bg-orange-500 text-white w-fit px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform active:scale-95 shadow-lg"
             >
-                {isPending ? 'Verification Pending...' : 'Unlock Live Access →'}
+                {generalStatus === 'pending' ? 'Verification Pending...' : 'Unlock Live Access →'}
             </Link>
           )}
         </div>
@@ -159,8 +182,8 @@ export default function StudentDashboard() {
             &quot;Remember to review the Hardware Structure PDF before our next session. We will be deconstructing input processing cycles in the live workshop.&quot;
           </p>
           <div className="mt-6 flex items-center gap-2">
-             <div className="w-8 h-8 rounded-full bg-blue-200"></div>
-             <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">G{data?.grade} Theory</span>
+              <div className="w-8 h-8 rounded-full bg-blue-200"></div>
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">G{data?.grade} Theory</span>
           </div>
         </div>
       </div>
@@ -171,46 +194,52 @@ export default function StudentDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {lessons.length > 0 ? (
-          lessons.map((lesson) => (
-            <div key={lesson.id} className="bg-white border border-slate-50 p-8 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
-              <div>
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl mb-6 ${lesson.video_url ? 'bg-orange-50' : 'bg-blue-50'}`}>
-                  {lesson.video_url ? '📼' : '📚'}
-                </div>
-                <h3 className="font-black uppercase text-slate-800 text-[13px] leading-tight mb-2 tracking-tight line-clamp-2 italic">
-                  {lesson.title}
-                </h3>
-                <div className="flex items-center gap-2 mb-8">
-                    <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest italic">
-                    {lesson.video_url ? 'Video Session' : 'Lecture Note'}
-                    </p>
-                    {!hasAccess && (
-                        <span className="text-[8px] bg-red-50 text-red-500 px-2 py-0.5 rounded font-black uppercase tracking-tighter italic">Locked</span>
-                    )}
-                </div>
-              </div>
+          lessons.map((lesson) => {
+            const status = getLessonStatus(lesson.id);
+            const lessonHasAccess = status === 'approved';
+            const lessonIsPending = status === 'pending';
 
-              {hasAccess ? (
-                lesson.video_url ? (
-                  <Link href={`/student/lessons/${lesson.id}`} className="w-full py-3 bg-[#1A5683] text-white rounded-xl text-[9px] font-black uppercase tracking-widest text-center transition-all hover:bg-slate-900">
-                    Stream Video →
-                  </Link>
+            return (
+              <div key={lesson.id} className="bg-white border border-slate-50 p-8 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+                <div>
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl mb-6 ${lesson.video_url ? 'bg-orange-50' : 'bg-blue-50'}`}>
+                    {lesson.video_url ? '📼' : '📚'}
+                  </div>
+                  <h3 className="font-black uppercase text-slate-800 text-[13px] leading-tight mb-2 tracking-tight line-clamp-2 italic">
+                    {lesson.title}
+                  </h3>
+                  <div className="flex items-center gap-2 mb-8">
+                      <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest italic">
+                      {lesson.video_url ? 'Video Session' : 'Lecture Note'}
+                      </p>
+                      {!lessonHasAccess && (
+                          <span className="text-[8px] bg-red-50 text-red-500 px-2 py-0.5 rounded font-black uppercase tracking-tighter italic">Locked</span>
+                      )}
+                  </div>
+                </div>
+
+                {lessonHasAccess ? (
+                  lesson.video_url ? (
+                    <Link href={`/student/lessons/${lesson.id}`} className="w-full py-3 bg-[#1A5683] text-white rounded-xl text-[9px] font-black uppercase tracking-widest text-center transition-all hover:bg-slate-900">
+                      Stream Video →
+                    </Link>
+                  ) : (
+                    <a href={`/api/admin/content?fileId=${lesson.material_id}`} target="_blank" className="w-full py-3 bg-[#4F46E5] text-white rounded-xl text-[9px] font-black uppercase tracking-widest text-center transition-all hover:bg-slate-900">
+                      Download PDF ↓
+                    </a>
+                  )
                 ) : (
-                  <a href={`/api/admin/content?fileId=${lesson.material_id}`} target="_blank" className="w-full py-3 bg-[#4F46E5] text-white rounded-xl text-[9px] font-black uppercase tracking-widest text-center transition-all hover:bg-slate-900">
-                    Download PDF ↓
-                  </a>
-                )
-              ) : (
-                <Link 
-                  href="/student/payments" 
-                  onClick={handleLockedClick} // ✅ Modal Trigger
-                  className="w-full py-3 bg-slate-100 text-slate-400 rounded-xl text-[9px] font-black uppercase tracking-widest text-center hover:bg-orange-100 hover:text-orange-600 transition-colors"
-                >
-                  {isPending ? 'Verification Pending...' : 'Unlock Lessons 🔒'}
-                </Link>
-              )}
-            </div>
-          ))
+                  <Link 
+                    href={`/student/payments?lessonId=${lesson.id}`} 
+                    onClick={(e) => handleLockedClick(status, e)}
+                    className="w-full py-3 bg-slate-100 text-slate-400 rounded-xl text-[9px] font-black uppercase tracking-widest text-center hover:bg-orange-100 hover:text-orange-600 transition-colors"
+                  >
+                    {lessonIsPending ? 'Verification Pending...' : 'Unlock Lessons 🔒'}
+                  </Link>
+                )}
+              </div>
+            );
+          })
         ) : (
           <div className="col-span-4 text-center py-20 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-100">
              <p className="text-slate-300 font-black uppercase italic tracking-widest text-xs">No lessons available for your grade yet</p>

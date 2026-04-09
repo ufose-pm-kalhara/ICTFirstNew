@@ -152,4 +152,7 @@ ADD COLUMN material_id INT NULL; -- Links to the material you upload
 
 ALTER TABLE recorded_lessons ADD COLUMN reset_token INT DEFAULT 0;
 
-ALTER TABLE payments ADD COLUMN billing_month VARCHAR(20) AFTER amount;
+ALTER TABLE payments ADD COLUMN lesson_id INT NULL AFTER billing_month;
+ALTER TABLE payments ADD CONSTRAINT fk_payment_lesson FOREIGN KEY (lesson_id) REFERENCES recorded_lessons(id);
+
+ALTER TABLE payments MODIFY proof_url LONGTEXT;
