@@ -6,250 +6,230 @@ interface CombinedLesson {
   id: number;
   title: string;
   grade: number;
-  video_url: string | null;
-  description: string | null;
+  month: string;
+  type: string;
+  video_url: string | null; // Stores JSON: [{url, desc}, ...]
+  description: string | null; // Main description
   notes: string | null;
-  material_id: number | null;
-  reset_token?: number; // Added to support reset logic
+  material_ids: string | null; // Stores JSON: [{id, label}, ...]
 }
 
 export default function ContentManagement() {
   const [lessons, setLessons] = useState<CombinedLesson[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Modal States
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [preview, setPreview] = useState<{ type: 'video' | 'pdf', url: string } | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const lessonTypes = ["Theory", "Revision", "Paper"];
 
   const [form, setForm] = useState({
     title: '',
     grade: '12',
-    videoUrl: '',
-    description: '',
-    notes: '',
-    file: null as File | null,
-    hasExistingFile: false
+    month: months[new Date().getMonth()],
+    type: 'Theory',
+    videos: [{ url: '', desc: '' }], // Multi-video with descriptions
+    mainDescription: '',
+    files: [] as { file: File; label: string }[], // Multi-pdf with labels
   });
 
-  // --- DATA FETCHING ---
   const fetchLessons = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/content');
       const data = await res.json();
       if (data.success) setLessons(data.videos || []);
-    } catch (err) {
-      console.error("Fetch failed:", err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error(err); } 
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchLessons(); }, [fetchLessons]);
 
-  // --- HANDLERS ---
-  const handleResetViews = async (id: number) => {
-    if (!confirm("Reset all student view counts for this lesson? This cannot be undone.")) return;
-    
-    try {
-      const res = await fetch('/api/admin/lessons/reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lessonId: id }),
-      });
-      
-      if (res.ok) {
-        alert("View counts reset successfully!");
-        fetchLessons(); // Refresh list to sync tokens
-      } else {
-        alert("Failed to reset views.");
-      }
-    } catch (err) {
-      console.error("Reset error:", err);
-    }
+  // --- VIDEO HANDLERS ---
+  const addVideoField = () => setForm({ ...form, videos: [...form.videos, { url: '', desc: '' }] });
+  const updateVideo = (index: number, field: 'url' | 'desc', value: string) => {
+    const newVideos = [...form.videos];
+    newVideos[index][field] = value;
+    setForm({ ...form, videos: newVideos });
   };
 
-  const openCreateModal = () => {
-    setEditingId(null);
-    setForm({ title: '', grade: '12', videoUrl: '', description: '', notes: '', file: null, hasExistingFile: false });
-    setIsFormOpen(true);
+  // --- FILE HANDLERS ---
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files).map(f => ({ file: f, label: f.name }));
+      setForm({ ...form, files: [...form.files, ...newFiles] });
+    }
+  };
+  const updateFileLabel = (index: number, label: string) => {
+    const newFiles = [...form.files];
+    newFiles[index].label = label;
+    setForm({ ...form, files: newFiles });
+  };
+
+  // --- CRUD FUNCTIONS ---
+  const handleDelete = async (id: number) => {
+    if (!confirm("Delete this entire lesson and all materials?")) return;
+    const res = await fetch(`/api/admin/content?id=${id}`, { method: 'DELETE' });
+    if (res.ok) fetchLessons();
   };
 
   const openEditModal = (lesson: CombinedLesson) => {
+    let parsedVideos = [{ url: '', desc: '' }];
+    try { parsedVideos = JSON.parse(lesson.video_url || '[]'); } catch(e){}
+    
     setEditingId(lesson.id);
     setForm({
       title: lesson.title,
       grade: lesson.grade.toString(),
-      videoUrl: lesson.video_url || '',
-      description: lesson.description || '',
-      notes: lesson.notes || '',
-      file: null,
-      hasExistingFile: !!lesson.material_id
+      month: lesson.month || months[0],
+      type: lesson.type || 'Theory',
+      videos: parsedVideos.length ? parsedVideos : [{ url: '', desc: '' }],
+      mainDescription: lesson.description || '',
+      files: [], // Note: Editing existing files requires separate logic or re-upload
     });
     setIsFormOpen(true);
-  };
-
-  const handlePreview = (lesson: CombinedLesson) => {
-    if (lesson.material_id) {
-      setPreview({ type: 'pdf', url: `/api/admin/content?fileId=${lesson.material_id}` });
-    } else if (lesson.video_url) {
-      let embedUrl = lesson.video_url;
-      if (embedUrl.includes('watch?v=')) {
-        embedUrl = embedUrl.replace('watch?v=', 'embed/');
-      } else if (embedUrl.includes('youtu.be/')) {
-        embedUrl = `https://www.youtube.com/embed/${embedUrl.split('youtu.be/')[1]}`;
-      }
-      setPreview({ type: 'video', url: embedUrl });
-    } else {
-      alert("No preview available for this lesson.");
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData();
     if (editingId) formData.append('id', editingId.toString());
+    
     formData.append('title', form.title);
     formData.append('grade', form.grade);
-    formData.append('videoUrl', form.videoUrl);
-    formData.append('description', form.description);
-    formData.append('notes', form.notes);
-    if (form.file) formData.append('file', form.file);
+    formData.append('month', form.month);
+    formData.append('type', form.type);
+    formData.append('description', form.mainDescription);
+    formData.append('videoUrls', JSON.stringify(form.videos));
+    
+    // Append files and their specific labels
+    form.files.forEach((f, i) => {
+      formData.append(`files`, f.file);
+      formData.append(`label_${i}`, f.label);
+    });
 
     const method = editingId ? 'PUT' : 'POST';
     const res = await fetch('/api/admin/content', { method, body: formData });
-    
     if (res.ok) {
       setIsFormOpen(false);
       fetchLessons();
-      alert(editingId ? "Updated!" : "Published!");
+      alert("Lesson Updated!");
     }
-  };
-
-  const deleteLesson = async (id: number) => {
-    if (!confirm("Are you sure? This deletes the lesson and the PDF forever.")) return;
-    const res = await fetch(`/api/admin/content?id=${id}`, { method: 'DELETE' });
-    if (res.ok) fetchLessons();
   };
 
   return (
     <div className="max-w-6xl mx-auto p-8 min-h-screen bg-slate-50/30 font-sans">
-      
-      {/* HEADER */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+      <header className="flex justify-between items-end mb-12">
         <div>
-          <h1 className="text-6xl font-black italic uppercase tracking-tighter text-slate-900">Content</h1>
-          <p className="text-slate-400 font-bold text-xs tracking-[0.4em] uppercase mt-2">Admin Management</p>
+          <h1 className="text-6xl font-black italic uppercase text-slate-900 tracking-tighter">Vault</h1>
+          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-2">Content Management System</p>
         </div>
-        <button 
-          onClick={openCreateModal}
-          className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#1A5683] transition-all shadow-xl shadow-blue-900/10"
-        >
-          + Add New Lesson
+        <button onClick={() => { setEditingId(null); setIsFormOpen(true); }} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#1A5683] transition-all shadow-xl">
+          + New Lesson
         </button>
       </header>
 
       {/* LIST SECTION */}
       <div className="space-y-4">
         {loading ? (
-          <div className="py-20 text-center font-black text-slate-200 text-4xl animate-pulse italic uppercase tracking-widest">Loading...</div>
+          <div className="animate-pulse text-slate-300 font-black text-3xl italic">LOADING...</div>
         ) : (
           lessons.map((lesson) => (
-            <div key={lesson.id} className="flex flex-col md:flex-row items-center justify-between p-6 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group gap-4">
-              <div className="flex items-center gap-6 w-full md:w-auto">
-                <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center text-3xl shadow-inner group-hover:scale-110 transition-transform">🎬</div>
+            <div key={lesson.id} className="p-6 bg-white rounded-[2.5rem] border border-slate-100 flex justify-between items-center group hover:shadow-lg transition-all">
+              <div className="flex items-center gap-6">
+                <div className="text-sm font-black text-[#1A5683] bg-blue-50 px-4 py-3 rounded-2xl uppercase">
+                  {lesson.month ? lesson.month.slice(0, 3) : 'N/A'}
+                </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="bg-[#1A5683] text-white text-[8px] font-black px-2 py-0.5 rounded-md">G{lesson.grade}</span>
-                    <h3 className="font-black text-slate-800 uppercase italic text-lg tracking-tight">{lesson.title}</h3>
+                  <h3 className="font-black text-slate-800 uppercase italic text-lg tracking-tight">{lesson.title}</h3>
+                  <div className="flex gap-2 mt-1">
+                    <span className="text-[9px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase">{lesson.type}</span>
+                    <span className="text-[9px] font-black bg-blue-100 text-[#1A5683] px-2 py-0.5 rounded uppercase">Grade {lesson.grade}</span>
                   </div>
-                  <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">
-                    {lesson.video_url ? '📹 Video' : ''} {lesson.material_id ? ' • 📄 PDF' : ''}
-                  </p>
                 </div>
               </div>
-
-              <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-                {/* Reset Button */}
-                <button 
-                  onClick={() => handleResetViews(lesson.id)}
-                  title="Reset Student View Counts"
-                  className="px-4 py-3 rounded-2xl bg-orange-50 text-orange-600 text-[9px] font-black uppercase tracking-widest hover:bg-orange-600 hover:text-white transition-all border border-orange-100"
-                >
-                  Reset Views
-                </button>
-                <button onClick={() => handlePreview(lesson)} className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all">👁️</button>
-                <button onClick={() => openEditModal(lesson)} className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-slate-200 hover:text-slate-800 transition-all">✏️</button>
-                <button onClick={() => deleteLesson(lesson.id)} className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">🗑️</button>
+              <div className="flex gap-2">
+                <button onClick={() => openEditModal(lesson)} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 transition-all">✏️</button>
+                <button onClick={() => handleDelete(lesson.id)} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-all">🗑️</button>
               </div>
             </div>
           ))
         )}
       </div>
 
-      {/* EDIT/CREATE MODAL */}
+      {/* ENHANCED MODAL */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-4xl rounded-[3.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-12">
-              <div className="flex justify-between items-center mb-10">
-                <h2 className="text-3xl font-black italic uppercase text-slate-900">{editingId ? 'Edit Lesson' : 'New Lesson'}</h2>
-                <button onClick={() => setIsFormOpen(false)} className="text-slate-300 hover:text-red-500 text-3xl">✕</button>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white w-full max-w-4xl rounded-[3.5rem] p-12 my-auto shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex justify-between mb-8">
+              <h2 className="text-3xl font-black italic uppercase text-slate-900">{editingId ? 'Edit Lesson' : 'Create Lesson'}</h2>
+              <button onClick={() => setIsFormOpen(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center hover:bg-red-50 transition-all">✕</button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Basic Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400 ml-4">Lesson Header</label>
+                  <input type="text" placeholder="Title" className="w-full bg-slate-50 rounded-2xl p-5 font-bold outline-none ring-offset-2 focus:ring-2 ring-blue-100" value={form.title} onChange={e => setForm({...form, title: e.target.value})} required />
+                </div>
+                <div className="grid grid-cols-2 gap-4 pt-6">
+                  <select className="bg-slate-50 rounded-2xl p-5 font-bold outline-none" value={form.month} onChange={e => setForm({...form, month: e.target.value})}>
+                    {months.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                  <select className="bg-slate-50 rounded-2xl p-5 font-bold outline-none" value={form.type} onChange={e => setForm({...form, type: e.target.value})}>
+                    {lessonTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="space-y-6">
-                  <input type="text" placeholder="Lesson Title" className="w-full bg-slate-50 rounded-2xl p-5 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-100"
-                    value={form.title} onChange={e => setForm({...form, title: e.target.value})} required />
-                  <div className="grid grid-cols-2 gap-4">
-                    <select className="w-full bg-slate-50 rounded-2xl p-5 text-sm font-bold" value={form.grade} onChange={e => setForm({...form, grade: e.target.value})}>
-                      {[10,11,12,13].map(g => <option key={g} value={g.toString()}>Grade {g}</option>)}
-                    </select>
-                    <input type="text" placeholder="Video Link" className="w-full bg-slate-50 rounded-2xl p-5 text-sm font-bold"
-                      value={form.videoUrl} onChange={e => setForm({...form, videoUrl: e.target.value})} />
+              {/* Videos Section */}
+              <div className="space-y-4 bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
+                <label className="text-[10px] font-black uppercase text-[#1A5683] tracking-widest flex justify-between">
+                  Video Resources
+                  <button type="button" onClick={addVideoField} className="text-blue-600 hover:underline">+ Add Link</button>
+                </label>
+                {form.videos.map((vid, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-50">
+                    <input type="text" placeholder="YouTube URL" className="bg-slate-50 rounded-xl p-3 text-sm font-bold outline-none" value={vid.url} onChange={e => updateVideo(index, 'url', e.target.value)} />
+                    <input type="text" placeholder="Video Description (Optional)" className="bg-slate-50 rounded-xl p-3 text-sm font-bold outline-none" value={vid.desc} onChange={e => updateVideo(index, 'desc', e.target.value)} />
                   </div>
-                  <textarea rows={4} placeholder="Description" className="w-full bg-slate-50 rounded-2xl p-5 text-sm font-bold resize-none"
-                    value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
-                </div>
+                ))}
+              </div>
 
-                <div className="space-y-6 flex flex-col">
-                  <div onClick={() => fileInputRef.current?.click()} className={`flex-1 border-4 border-dashed rounded-[2.5rem] p-10 flex flex-col items-center justify-center cursor-pointer transition-all ${form.hasExistingFile && !form.file ? 'border-green-100 bg-green-50/30' : 'border-slate-50 bg-slate-50 hover:bg-slate-100'}`}>
-                    <span className="text-4xl mb-2">📄</span>
-                    <p className="font-black text-slate-800 text-[10px] uppercase tracking-widest text-center">
-                      {form.file ? form.file.name : form.hasExistingFile ? "PDF Attached (Click to Change)" : "Upload PDF Material"}
-                    </p>
-                    <input type="file" accept=".pdf" className="hidden" ref={fileInputRef} onChange={e => setForm({...form, file: e.target.files?.[0] || null})} />
-                  </div>
-                  <textarea rows={2} placeholder="Private Notes" className="w-full bg-slate-50 rounded-2xl p-5 text-sm font-bold resize-none"
-                    value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} />
-                  <button className="w-full bg-[#1A5683] text-white py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl hover:scale-[1.02] transition-transform">
-                    {editingId ? 'Save Changes' : 'Publish Lesson'}
-                  </button>
+              {/* PDF Section */}
+              <div className="space-y-4 bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
+                <label className="text-[10px] font-black uppercase text-[#1A5683] tracking-widest flex justify-between">
+                  PDF Materials
+                  <label className="text-blue-600 cursor-pointer hover:underline">
+                    + Upload Files
+                    <input type="file" accept=".pdf" multiple className="hidden" onChange={handleFileChange} />
+                  </label>
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {form.files.map((f, index) => (
+                    <div key={index} className="bg-white p-4 rounded-2xl flex items-center gap-3 border border-slate-100 shadow-sm">
+                      <div className="text-xl">📄</div>
+                      <input type="text" className="flex-1 text-xs font-bold outline-none bg-blue-50/50 p-2 rounded-lg" value={f.label} onChange={e => updateFileLabel(index, e.target.value)} placeholder="File label..." />
+                      <button type="button" onClick={() => setForm({...form, files: form.files.filter((_, i) => i !== index)})} className="text-red-400 text-xs font-bold">✕</button>
+                    </div>
+                  ))}
                 </div>
-              </form>
-            </div>
+              </div>
+
+              {/* Main Summary */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-4">Main Lesson Description</label>
+                <textarea rows={3} placeholder="Provide an overall summary of the lesson content..." className="w-full bg-slate-50 rounded-[2rem] p-6 text-sm font-bold resize-none outline-none focus:ring-2 ring-blue-100" value={form.mainDescription} onChange={e => setForm({...form, mainDescription: e.target.value})} />
+              </div>
+
+              <button className="w-full bg-[#1A5683] text-white py-6 rounded-[2rem] font-black uppercase tracking-[0.3em] shadow-2xl hover:bg-slate-900 transition-all transform hover:scale-[1.01] active:scale-95">
+                {editingId ? 'Update Lesson' : 'Publish Week Content'}
+              </button>
+            </form>
           </div>
         </div>
       )}
-
-      {/* PREVIEW MODAL */}
-      {preview && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-6xl h-[85vh] rounded-[4rem] overflow-hidden flex flex-col shadow-2xl">
-            <div className="p-8 flex justify-between items-center bg-white border-b">
-              <span className="font-black text-slate-400 text-[10px] uppercase tracking-[0.5em]">Preview Mode</span>
-              <button onClick={() => setPreview(null)} className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">✕</button>
-            </div>
-            <div className="flex-1 bg-slate-800">
-              <iframe src={preview.url} className="w-full h-full border-none" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
