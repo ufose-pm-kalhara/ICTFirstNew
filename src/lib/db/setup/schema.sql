@@ -179,3 +179,6 @@ ALTER TABLE live_links ADD COLUMN type VARCHAR(20) DEFAULT 'Theory';
 ALTER TABLE live_links 
 ADD COLUMN lesson_id INT NULL,
 ADD CONSTRAINT fk_live_lesson FOREIGN KEY (lesson_id) REFERENCES recorded_lessons(id) ON DELETE CASCADE;
+
+ALTER TABLE students 
+ADD COLUMN status VARCHAR(20) DEFAULT 'Pending';

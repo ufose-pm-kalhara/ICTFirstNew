@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db/mysql';
 import { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
 
-// --- GET: Fetch List ---
+// --- GET: Fetch List with Material Details ---
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const fileId = searchParams.get('fileId');
 
-    // Handle single file preview (unchanged logic)
+    // Handle single file preview/download
     if (fileId) {
       const [file] = await pool.query<RowDataPacket[]>(
         'SELECT file_data, file_type FROM materials WHERE id = ?', [fileId]
@@ -19,14 +19,31 @@ export async function GET(req: Request) {
       });
     }
 
-    // Fetch lessons - Added 'month' and 'type' to the query!
+    /**
+     * UNIVERSAL COMPATIBILITY FIX:
+     * Using GROUP_CONCAT to manually build a JSON string.
+     * COALESCE ensures we return an empty array string "[]" if no files exist.
+     */
     const [videos] = await pool.query<RowDataPacket[]>(
-      `SELECT id, title, grade, month, type, video_url, description, notes, material_id, created_at 
-       FROM recorded_lessons 
-       ORDER BY created_at DESC`
+      `SELECT rl.*, 
+        (
+          SELECT GROUP_CONCAT(
+            CONCAT('{"id":', id, ',"label":"', REPLACE(title, '"', '\\"'), '"}')
+          )
+          FROM materials 
+          WHERE FIND_IN_SET(id, IFNULL(rl.material_id, ''))
+        ) as material_list_string
+       FROM recorded_lessons rl
+       ORDER BY rl.created_at DESC`
     );
+
+    // Map the result so the frontend gets the JSON string it expects
+    const formattedVideos = videos.map(v => ({
+      ...v,
+      material_ids: v.material_list_string ? `[${v.material_list_string}]` : "[]"
+    }));
     
-    return NextResponse.json({ success: true, videos: videos || [] });
+    return NextResponse.json({ success: true, videos: formattedVideos });
 
   } catch (error) {
     console.error("GET_ERROR:", error);
@@ -34,34 +51,34 @@ export async function GET(req: Request) {
   }
 }
 
-// --- POST: Create New Lesson + Multi-PDF Upload ---
+// --- POST: Create New Lesson ---
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
-    const title = formData.get('title') as string;
-    const grade = formData.get('grade') as string;
-    const month = formData.get('month') as string;
-    const type = formData.get('type') as string;
-    const videoUrls = formData.get('videoUrls') as string; // This is a JSON string from frontend
-    const description = formData.get('description') as string;
+    const title = formData.get('title');
+    const grade = formData.get('grade');
+    const month = formData.get('month');
+    const type = formData.get('type');
+    const videoUrls = formData.get('videoUrls') as string;
+    const description = formData.get('description');
     
-    // Handle Multiple Files
     const files = formData.getAll('files') as File[];
     const materialIds: number[] = [];
 
-    for (const file of files) {
+    // Save New Files
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const label = formData.get(`label_${i}`) as string || file.name;
       if (file.size > 0) {
         const buffer = Buffer.from(await file.arrayBuffer());
         const [matResult] = await pool.query<ResultSetHeader>(
           'INSERT INTO materials (title, file_data, file_type, file_size, created_by) VALUES (?, ?, ?, ?, ?)',
-          [file.name, buffer, file.type, file.size, 1]
+          [label, buffer, file.type, file.size, 1]
         );
         materialIds.push(matResult.insertId);
       }
     }
 
-    // Save to recorded_lessons
-    // We store materialIds as a comma-separated string or JSON
     await pool.query<ResultSetHeader>(
       `INSERT INTO recorded_lessons 
       (title, grade, month, type, video_url, description, material_id, created_by) 
@@ -76,30 +93,77 @@ export async function POST(req: Request) {
   }
 }
 
+interface ExistingFile {
+  id: number;
+}
+
+// --- PUT: Update Existing Lesson ---
+export async function PUT(req: Request) {
+  try {
+    const formData = await req.formData();
+    const id = formData.get('id');
+    const title = formData.get('title');
+    const grade = formData.get('grade');
+    const month = formData.get('month');
+    const type = formData.get('type');
+    const videoUrls = formData.get('videoUrls') as string;
+    const description = formData.get('description');
+    
+    // 1. Get IDs of files the admin decided to keep (removes deleted ones)
+    const existingFilesJson = formData.get('existingFiles') as string;
+    const existingFiles = JSON.parse(existingFilesJson || '[]') as ExistingFile[];
+    const currentMaterialIds: number[] = existingFiles.map((f: ExistingFile) => f.id);
+
+    // 2. Upload brand new files
+    const newFiles = formData.getAll('files') as File[];
+    for (let i = 0; i < newFiles.length; i++) {
+        const file = newFiles[i];
+        const label = formData.get(`label_${i}`) as string || file.name;
+        if (file.size > 0) {
+            const buffer = Buffer.from(await file.arrayBuffer());
+            const [matResult] = await pool.query<ResultSetHeader>(
+                'INSERT INTO materials (title, file_data, file_type, file_size, created_by) VALUES (?, ?, ?, ?, ?)',
+                [label, buffer, file.type, file.size, 1]
+            );
+            currentMaterialIds.push(matResult.insertId);
+        }
+    }
+
+    // 3. Update the record with the merged ID list
+    await pool.query(
+      `UPDATE recorded_lessons 
+       SET title = ?, grade = ?, month = ?, type = ?, video_url = ?, description = ?, material_id = ?
+       WHERE id = ?`,
+      [title, grade, month, type, videoUrls, description, currentMaterialIds.join(','), id]
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("PUT_ERROR:", error);
+    return NextResponse.json({ success: false }, { status: 500 });
+  }
+}
+
 // --- DELETE: Remove Lesson and its PDFs ---
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
-
     if (!id) return NextResponse.json({ success: false }, { status: 400 });
 
-    // 1. Find all associated material IDs
     const [lesson] = await pool.query<RowDataPacket[]>(
       "SELECT material_id FROM recorded_lessons WHERE id = ?", [id]
     );
     
-    const mIds = lesson[0]?.material_id; // e.g., "10,11,12"
-
+    const mIds = lesson[0]?.material_id;
     if (mIds) {
       const idArray = mIds.split(',');
-      // Delete all materials in the list
+      // Delete child materials first
       await pool.query(`DELETE FROM materials WHERE id IN (?)`, [idArray]);
     }
 
-    // 2. Delete the lesson
+    // Delete the lesson itself
     await pool.query("DELETE FROM recorded_lessons WHERE id = ?", [id]);
-
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE_ERROR:", error);

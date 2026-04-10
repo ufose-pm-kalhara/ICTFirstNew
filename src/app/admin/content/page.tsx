@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface CombinedLesson {
   id: number;
@@ -8,10 +8,10 @@ interface CombinedLesson {
   grade: number;
   month: string;
   type: string;
-  video_url: string | null; // Stores JSON: [{url, desc}, ...]
-  description: string | null; // Main description
+  video_url: string | null; 
+  description: string | null; 
   notes: string | null;
-  material_ids: string | null; // Stores JSON: [{id, label}, ...]
+  material_ids: string | null; // This contains the JSON string of existing files
 }
 
 export default function ContentManagement() {
@@ -22,15 +22,17 @@ export default function ContentManagement() {
 
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const lessonTypes = ["Theory", "Revision", "Paper"];
+  const grades = ["10", "11", "12", "13"];
 
   const [form, setForm] = useState({
     title: '',
     grade: '12',
     month: months[new Date().getMonth()],
     type: 'Theory',
-    videos: [{ url: '', desc: '' }], // Multi-video with descriptions
+    videos: [{ url: '', desc: '' }], 
     mainDescription: '',
-    files: [] as { file: File; label: string }[], // Multi-pdf with labels
+    files: [] as { file: File; label: string }[], 
+    existingFiles: [] as { id: number; label: string }[], // Track files already in DB
   });
 
   const fetchLessons = useCallback(async () => {
@@ -45,7 +47,6 @@ export default function ContentManagement() {
 
   useEffect(() => { fetchLessons(); }, [fetchLessons]);
 
-  // --- VIDEO HANDLERS ---
   const addVideoField = () => setForm({ ...form, videos: [...form.videos, { url: '', desc: '' }] });
   const updateVideo = (index: number, field: 'url' | 'desc', value: string) => {
     const newVideos = [...form.videos];
@@ -53,20 +54,19 @@ export default function ContentManagement() {
     setForm({ ...form, videos: newVideos });
   };
 
-  // --- FILE HANDLERS ---
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files).map(f => ({ file: f, label: f.name }));
       setForm({ ...form, files: [...form.files, ...newFiles] });
     }
   };
+  
   const updateFileLabel = (index: number, label: string) => {
     const newFiles = [...form.files];
     newFiles[index].label = label;
     setForm({ ...form, files: newFiles });
   };
 
-  // --- CRUD FUNCTIONS ---
   const handleDelete = async (id: number) => {
     if (!confirm("Delete this entire lesson and all materials?")) return;
     const res = await fetch(`/api/admin/content?id=${id}`, { method: 'DELETE' });
@@ -75,7 +75,11 @@ export default function ContentManagement() {
 
   const openEditModal = (lesson: CombinedLesson) => {
     let parsedVideos = [{ url: '', desc: '' }];
-    try { parsedVideos = JSON.parse(lesson.video_url || '[]'); } catch(e){}
+    let parsedFiles = [];
+    try { 
+        parsedVideos = JSON.parse(lesson.video_url || '[]'); 
+        parsedFiles = JSON.parse(lesson.material_ids || '[]'); // Parse existing PDFs
+    } catch(e){}
     
     setEditingId(lesson.id);
     setForm({
@@ -85,7 +89,8 @@ export default function ContentManagement() {
       type: lesson.type || 'Theory',
       videos: parsedVideos.length ? parsedVideos : [{ url: '', desc: '' }],
       mainDescription: lesson.description || '',
-      files: [], // Note: Editing existing files requires separate logic or re-upload
+      files: [], 
+      existingFiles: parsedFiles, // Set existing files here
     });
     setIsFormOpen(true);
   };
@@ -102,7 +107,9 @@ export default function ContentManagement() {
     formData.append('description', form.mainDescription);
     formData.append('videoUrls', JSON.stringify(form.videos));
     
-    // Append files and their specific labels
+    // Send existing files back to API to know which to keep/update labels
+    formData.append('existingFiles', JSON.stringify(form.existingFiles));
+    
     form.files.forEach((f, i) => {
       formData.append(`files`, f.file);
       formData.append(`label_${i}`, f.label);
@@ -113,7 +120,7 @@ export default function ContentManagement() {
     if (res.ok) {
       setIsFormOpen(false);
       fetchLessons();
-      alert("Lesson Updated!");
+      alert(editingId ? "Lesson Updated!" : "Lesson Published!");
     }
   };
 
@@ -129,7 +136,6 @@ export default function ContentManagement() {
         </button>
       </header>
 
-      {/* LIST SECTION */}
       <div className="space-y-4">
         {loading ? (
           <div className="animate-pulse text-slate-300 font-black text-3xl italic">LOADING...</div>
@@ -157,7 +163,6 @@ export default function ContentManagement() {
         )}
       </div>
 
-      {/* ENHANCED MODAL */}
       {isFormOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
           <div className="bg-white w-full max-w-4xl rounded-[3.5rem] p-12 my-auto shadow-2xl animate-in zoom-in-95 duration-300">
@@ -167,23 +172,34 @@ export default function ContentManagement() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-4">Lesson Header</label>
                   <input type="text" placeholder="Title" className="w-full bg-slate-50 rounded-2xl p-5 font-bold outline-none ring-offset-2 focus:ring-2 ring-blue-100" value={form.title} onChange={e => setForm({...form, title: e.target.value})} required />
                 </div>
-                <div className="grid grid-cols-2 gap-4 pt-6">
-                  <select className="bg-slate-50 rounded-2xl p-5 font-bold outline-none" value={form.month} onChange={e => setForm({...form, month: e.target.value})}>
-                    {months.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                  <select className="bg-slate-50 rounded-2xl p-5 font-bold outline-none" value={form.type} onChange={e => setForm({...form, type: e.target.value})}>
-                    {lessonTypes.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
+                
+                <div className="grid grid-cols-3 gap-4 pt-6">
+                   <div className="space-y-1">
+                    <p className="text-[8px] font-black uppercase text-slate-400 px-2">Grade</p>
+                    <select className="w-full bg-slate-50 rounded-2xl p-5 font-bold outline-none appearance-none" value={form.grade} onChange={e => setForm({...form, grade: e.target.value})}>
+                      {grades.map(g => <option key={g} value={g}>G-{g}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[8px] font-black uppercase text-slate-400 px-2">Month</p>
+                    <select className="w-full bg-slate-50 rounded-2xl p-5 font-bold outline-none appearance-none" value={form.month} onChange={e => setForm({...form, month: e.target.value})}>
+                      {months.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[8px] font-black uppercase text-slate-400 px-2">Type</p>
+                    <select className="w-full bg-slate-50 rounded-2xl p-5 font-bold outline-none appearance-none" value={form.type} onChange={e => setForm({...form, type: e.target.value})}>
+                      {lessonTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              {/* Videos Section */}
               <div className="space-y-4 bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
                 <label className="text-[10px] font-black uppercase text-[#1A5683] tracking-widest flex justify-between">
                   Video Resources
@@ -197,18 +213,31 @@ export default function ContentManagement() {
                 ))}
               </div>
 
-              {/* PDF Section */}
               <div className="space-y-4 bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
                 <label className="text-[10px] font-black uppercase text-[#1A5683] tracking-widest flex justify-between">
                   PDF Materials
                   <label className="text-blue-600 cursor-pointer hover:underline">
-                    + Upload Files
+                    + Upload New Files
                     <input type="file" accept=".pdf" multiple className="hidden" onChange={handleFileChange} />
                   </label>
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* EXISTING FILES IN DATABASE */}
+                  {form.existingFiles.map((f, index) => (
+                    <div key={`ex-${index}`} className="bg-blue-50/50 p-4 rounded-2xl flex items-center gap-3 border border-blue-100 shadow-sm">
+                      <div className="text-xl">✅</div>
+                      <input type="text" className="flex-1 text-xs font-bold outline-none bg-white p-2 rounded-lg" value={f.label} onChange={e => {
+                         const updated = [...form.existingFiles];
+                         updated[index].label = e.target.value;
+                         setForm({...form, existingFiles: updated});
+                      }} />
+                      <button type="button" onClick={() => setForm({...form, existingFiles: form.existingFiles.filter((_, i) => i !== index)})} className="text-red-400 text-xs font-bold">✕</button>
+                    </div>
+                  ))}
+
+                  {/* NEW FILES SELECTED FOR UPLOAD */}
                   {form.files.map((f, index) => (
-                    <div key={index} className="bg-white p-4 rounded-2xl flex items-center gap-3 border border-slate-100 shadow-sm">
+                    <div key={`new-${index}`} className="bg-white p-4 rounded-2xl flex items-center gap-3 border border-slate-100 shadow-sm">
                       <div className="text-xl">📄</div>
                       <input type="text" className="flex-1 text-xs font-bold outline-none bg-blue-50/50 p-2 rounded-lg" value={f.label} onChange={e => updateFileLabel(index, e.target.value)} placeholder="File label..." />
                       <button type="button" onClick={() => setForm({...form, files: form.files.filter((_, i) => i !== index)})} className="text-red-400 text-xs font-bold">✕</button>
@@ -217,7 +246,6 @@ export default function ContentManagement() {
                 </div>
               </div>
 
-              {/* Main Summary */}
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase text-slate-400 ml-4">Main Lesson Description</label>
                 <textarea rows={3} placeholder="Provide an overall summary of the lesson content..." className="w-full bg-slate-50 rounded-[2rem] p-6 text-sm font-bold resize-none outline-none focus:ring-2 ring-blue-100" value={form.mainDescription} onChange={e => setForm({...form, mainDescription: e.target.value})} />

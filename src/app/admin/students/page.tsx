@@ -68,6 +68,11 @@ export default function StudentDirectory() {
     e.preventDefault();
     if (!selectedStudent) return;
 
+    // Logic: If Admin assigns an ID, we automatically set status to Active
+    const updatedStatus = (selectedStudent.student_id && selectedStudent.student_id.trim() !== '') 
+      ? 'Active' 
+      : selectedStudent.status;
+
     try {
       const res = await fetch('/api/admin/students/update', {
         method: 'PATCH',
@@ -75,7 +80,7 @@ export default function StudentDirectory() {
         body: JSON.stringify({
           id: selectedStudent.id,
           student_id: selectedStudent.student_id,
-          status: selectedStudent.status
+          status: updatedStatus
         }),
       });
       const data = await res.json();
@@ -115,10 +120,12 @@ export default function StudentDirectory() {
   };
 
   // --- Filtering Logic ---
+  // A student is considered pending if they are explicitly "Pending" OR have no ID assigned yet
   const pendingCount = students.filter(s => s.status === 'Pending' || !s.student_id).length;
 
   const filteredStudents = students.filter(s => {
-    const matchesTab = activeTab === 'all' ? true : (s.status === 'Pending' || !s.student_id);
+    const isPending = s.status === 'Pending' || !s.student_id;
+    const matchesTab = activeTab === 'all' ? true : isPending;
     const matchesSearch = s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           s.student_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           s.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -204,7 +211,7 @@ export default function StudentDirectory() {
             ) : filteredStudents.map((student) => (
               <tr key={student.id} className="group hover:bg-slate-50/50 transition-all">
                 <td className="px-10 py-6 font-black text-[#1A5683] text-sm tracking-tight text-center">
-                  {student.student_id || <span className="text-amber-500 italic text-[10px]">Awaiting ID</span>}
+                  {student.student_id || <span className="text-amber-500 italic text-[10px] animate-pulse">Awaiting ID</span>}
                 </td>
                 <td className="px-10 py-6">
                   <div className="flex items-center gap-4">
@@ -224,7 +231,8 @@ export default function StudentDirectory() {
                   <div className="flex items-center gap-2">
                     <div className={`w-1.5 h-1.5 rounded-full ${
                       student.status === 'Active' ? 'bg-green-500' : 
-                      student.status === 'Suspended' ? 'bg-red-500' : 'bg-slate-300'
+                      student.status === 'Suspended' ? 'bg-red-500' : 
+                      student.status === 'Pending' ? 'bg-amber-500' : 'bg-slate-300'
                     }`} />
                     <span className="text-[11px] font-black text-slate-600 uppercase tracking-tighter">{student.status}</span>
                   </div>
@@ -294,10 +302,12 @@ export default function StudentDirectory() {
                 <label className="text-[10px] font-black text-slate-400 uppercase">Assign Student ID</label>
                 <input 
                   type="text" 
+                  placeholder="e.g. ICT-2024-001"
                   className="w-full mt-2 p-4 bg-slate-50 rounded-xl font-bold outline-none ring-[#1A5683]/10 focus:ring-2" 
                   value={selectedStudent.student_id || ''} 
                   onChange={(e) => setSelectedStudent({...selectedStudent, student_id: e.target.value})} 
                 />
+                <p className="text-[9px] text-amber-500 font-bold uppercase mt-1">Assigning an ID will automatically set status to Active</p>
               </div>
               <div>
                 <label className="text-[10px] font-black text-slate-400 uppercase">Change Status</label>

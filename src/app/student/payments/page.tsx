@@ -146,7 +146,7 @@ function PaymentsContent() {
 
       <div className=" lg:col-span-7 space-y-8 ">
 
-        <div className="bg-white p-10 rounded-xl shadow-sm border">
+        <div className="bg-white p-10 rounded-xl shadow-sm ">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#8FC3F6] text-[#003D63] font-semibold text-sm">1</div>  
             <h2 className="font-semibold  text-gray-700 mb-1">
@@ -199,7 +199,7 @@ function PaymentsContent() {
           </div>
         </div>
 
-        <div className="bg-white p-10 rounded-xl shadow-sm border">
+        <div className="bg-white p-10 rounded-xl shadow-sm ">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#8FC3F6] text-[#003D63] font-semibold text-sm">2</div>
             <h2 className="font-semibold text-gray-700 mb-1">
