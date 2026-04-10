@@ -156,3 +156,26 @@ ALTER TABLE payments ADD COLUMN lesson_id INT NULL AFTER billing_month;
 ALTER TABLE payments ADD CONSTRAINT fk_payment_lesson FOREIGN KEY (lesson_id) REFERENCES recorded_lessons(id);
 
 ALTER TABLE payments MODIFY proof_url LONGTEXT;
+
+ALTER TABLE recorded_lessons 
+ADD COLUMN month VARCHAR(20) DEFAULT 'January',
+ADD COLUMN type ENUM('Theory', 'Revision', 'Paper') DEFAULT 'Theory';
+
+ALTER TABLE recorded_lessons 
+MODIFY COLUMN video_url LONGTEXT,
+MODIFY COLUMN material_id LONGTEXT; 
+
+ALTER TABLE recorded_lessons MODIFY COLUMN material_id VARCHAR(255);
+
+ALTER TABLE live_links 
+ADD COLUMN month VARCHAR(20) DEFAULT 'January',
+ADD COLUMN grade INT DEFAULT 12,
+ADD COLUMN announcement TEXT NULL,
+ADD COLUMN status ENUM('Pending', 'Live', 'Ended') DEFAULT 'Pending';
+
+-- Optional: If you want to link it to a specific lesson type (Theory/Revision)
+ALTER TABLE live_links ADD COLUMN type VARCHAR(20) DEFAULT 'Theory';
+
+ALTER TABLE live_links 
+ADD COLUMN lesson_id INT NULL,
+ADD CONSTRAINT fk_live_lesson FOREIGN KEY (lesson_id) REFERENCES recorded_lessons(id) ON DELETE CASCADE;
