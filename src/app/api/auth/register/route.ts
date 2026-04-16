@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     
-    // 1. Validation (Ensure your schema includes 'grade')
+    // 1. Validation (Zod Schema)
     const validation = registerSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json({ 
@@ -19,6 +19,27 @@ export async function POST(req: Request) {
 
     const { fullName, email, password, grade, phone } = validation.data;
 
+    // --- NEW SECURITY CHECKS (Server-side) ---
+
+    // A. Re-verify Name (No numbers or symbols)
+    const nameRegex = /^[a-zA-Z\s]*$/;
+    if (!nameRegex.test(fullName)) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Full name cannot contain numbers or symbols.' 
+      }, { status: 400 });
+    }
+
+    // B. Re-verify Phone (Exactly 10 digits)
+    if (phone && !/^\d{10}$/.test(phone)) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'WhatsApp number must be exactly 10 digits.' 
+      }, { status: 400 });
+    }
+
+    // ----------------------------------------
+
     // 2. Check if email already exists
     const existingUser = await StudentService.findByEmail(email);
     if (existingUser) {
@@ -28,14 +49,14 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
-    // 3. Generate Unique Student ID (Logic: GD + Grade + "-" + 5 Random Digits)
+    // 3. Generate Unique Student ID (GD + Grade + "-" + 5 Random Digits)
     const randomDigits = Math.floor(10000 + Math.random() * 90000);
     const generatedStudentId = `GD${grade}-${randomDigits}`;
 
     // 4. Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 5. Save to Database via Service
+    // 5. Save to Database
     await StudentService.create({
       studentId: generatedStudentId,
       fullName,
@@ -45,7 +66,6 @@ export async function POST(req: Request) {
       phone: phone || null
     });
 
-    // 6. Return success with the NEW Student ID
     return NextResponse.json({ 
       success: true, 
       message: 'Registration successful!',
