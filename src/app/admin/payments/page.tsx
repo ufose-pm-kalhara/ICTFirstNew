@@ -2,6 +2,18 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
+import { 
+  CheckCircle, 
+  XCircle, 
+  Clock, 
+  Search, 
+  Maximize2, 
+  X, 
+  FileText, 
+  ChevronLeft, 
+  ChevronRight,
+  ExternalLink
+} from 'lucide-react';
 
 interface AdminPayment {
   id: number;
@@ -18,7 +30,6 @@ export default function AdminPayments() {
   const [selectedPayment, setSelectedPayment] = useState<AdminPayment | null>(null);
   const [remarks, setRemarks] = useState(''); 
   
-  // ✅ New state for the Zoom Modal
   const [showZoomModal, setShowZoomModal] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
 
@@ -67,30 +78,28 @@ export default function AdminPayments() {
     : null;
 
   return (
-    <div className="p-6">
-      {/* ✅ Image Zoom Modal (Built-in Popup) */}
+    <div className="font-sans text-slate-900">
+      {/* Image Zoom Modal */}
       {showZoomModal && proofSrc && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/95 backdrop-blur-md p-4">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/90 backdrop-blur-md p-4">
           <button 
             onClick={() => { setShowZoomModal(false); setIsZoomed(false); }}
             className="absolute top-6 right-6 z-[210] bg-white text-slate-900 p-3 rounded-full hover:bg-red-500 hover:text-white transition-all shadow-xl"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X size={24} strokeWidth={2.5} />
           </button>
 
           <div 
-            className={`relative max-w-5xl max-h-full overflow-auto bg-white rounded-3xl shadow-2xl transition-all duration-300 ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+            className={`relative max-w-5xl max-h-full overflow-auto bg-white rounded-[2rem] shadow-2xl transition-all duration-300 ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
             onClick={() => setIsZoomed(!isZoomed)}
           >
             <img
               src={proofSrc}
               alt="Zoomed Slip"
-              className={`block transition-transform duration-300 ease-in-out ${isZoomed ? 'scale-[2.0] m-20' : 'max-h-[85vh] w-auto h-auto p-2'}`}
+              className={`block transition-transform duration-300 ease-in-out ${isZoomed ? 'scale-[2.0] m-20' : 'max-h-[85vh] w-auto h-auto p-4'}`}
             />
             {!isZoomed && (
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/80 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/80 text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm">
                 Click to Zoom
               </div>
             )}
@@ -99,74 +108,101 @@ export default function AdminPayments() {
       )}
 
       {/* Header section */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-[#2D3335] mb-2 ">Payment Verification</h1>
-          <p className='text-[#526070] text-sm tracking-tight'>Review and approve pending bank transfer slips for student enrollments.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Payment Verification</h1>
+          <p className='text-slate-500 text-sm font-medium mt-1'>Review and approve bank transfer slips for student enrollments.</p>
         </div>
 
-        <div className="flex items-center gap-3 bg-slate-100/80 px-4 py-1.5 rounded-full border border-slate-200">
-          <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider bg-[#F1F4F5]">Pending Slips</span>
-          <span className="bg-[#2B6390] text-white text-[11px] font-bold h-6 w-8 flex items-center justify-center rounded-full">{pendingCount}</span>
+        <div className="flex items-center gap-2 bg-white border border-slate-100 px-4 py-2 rounded-2xl shadow-sm">
+          <span className="text-[11px] font-bold uppercase text-slate-400 tracking-wider">Pending Slips</span>
+          <span className="bg-[#2563EB] text-white text-xs font-bold h-6 min-w-[2rem] flex items-center justify-center rounded-lg px-2">
+            {pendingCount}
+          </span>
         </div>
       </div>
 
       {/* Table Section */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-slate-50 border-b border-slate-100">
-            <tr>
-              <th className="p-6 text-[10px] font-black uppercase text-slate-400 ">Student Name</th>
-              <th className="p-6 text-[10px] font-black uppercase text-slate-400 text-center">Amount</th>
-              <th className="p-6 text-[10px] font-black uppercase text-slate-400 text-center">Submission Date</th>
-              <th className="p-6 text-[10px] font-black uppercase text-slate-400 text-center">Status</th>
-              <th className="p-6 text-[10px] font-black uppercase text-slate-400 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {currentItems.map((p) => (
-              <tr key={p.id} className="hover:bg-slate-50 transition">
-                <td className="p-6">
-                  <p className="font-bold text-slate-900">{p.full_name}</p>
-                  <p className="text-[10px] text-slate-400 uppercase font-bold">{p.student_id}</p>
-                </td>
-                <td className="p-6 font-mono font-bold text-[#2B6390] text-center">LKR {Number(p.amount).toLocaleString()}</td>
-                <td className="p-6 text-center">
-                  <p className=" text-[13px] font-medium text-[#5A6062]">
-                    {new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </p>
-                </td>
-                <td className="p-6 text-center">
-                  <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase ${
-                    p.status === 'approved' ? 'bg-green-200 text-green-700' :
-                    p.status === 'pending' ? 'bg-amber-200 text-amber-700' : 'bg-red-200 text-red-700'
-                  }`}>
-                    {p.status}
-                  </span>
-                </td>
-                <td className="p-6 text-center">
-                  <button 
-                    onClick={() => {setSelectedPayment(p); setRemarks(''); }}
-                    className="bg-[#D5E4F7] hover:bg-blue-200 text-slate-600 px-5 py-2 rounded-xl text-[11px] font-bold transition-all border border-slate-200 uppercase tracking-tight">
-                    View Slip
-                  </button>
-                </td>
+      <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-8 py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider">Student Details</th>
+                <th className="px-8 py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider text-center">Amount</th>
+                <th className="px-8 py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider text-center">Submitted</th>
+                <th className="px-8 py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider text-center">Status</th>
+                <th className="px-8 py-5 text-[11px] font-bold uppercase text-slate-400 tracking-wider text-right">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {currentItems.map((p) => (
+                <tr key={p.id} className="hover:bg-slate-50/30 transition-colors group">
+                  <td className="px-8 py-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center font-bold text-xs uppercase">
+                        {p.full_name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900 text-sm">{p.full_name}</p>
+                        <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tight">{p.student_id}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-8 py-5 text-center">
+                    <span className="font-bold text-slate-700 text-sm">LKR {Number(p.amount).toLocaleString()}</span>
+                  </td>
+                  <td className="px-8 py-5 text-center">
+                    <p className="text-xs font-semibold text-slate-500">
+                      {new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  </td>
+                  <td className="px-8 py-5 text-center">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter ${
+                      p.status === 'approved' ? 'bg-green-50 text-green-600' :
+                      p.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
+                    }`}>
+                      <div className={`w-1 h-1 rounded-full ${
+                        p.status === 'approved' ? 'bg-green-600' :
+                        p.status === 'pending' ? 'bg-amber-600' : 'bg-red-600'
+                      }`} />
+                      {p.status}
+                    </span>
+                  </td>
+                  <td className="px-8 py-5 text-right">
+                    <button 
+                      onClick={() => {setSelectedPayment(p); setRemarks(''); }}
+                      className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-600 px-4 py-2 rounded-xl text-xs font-bold transition-all border border-slate-200 shadow-sm"
+                    >
+                      <FileText size={14} />
+                      Details
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-        {/* Pagination logic remains same */}
-        <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            Showing {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, payments.length)} of {payments.length} Total
+        {/* Pagination */}
+        <div className="px-8 py-5 bg-slate-50/30 border-t border-slate-100 flex justify-between items-center">
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+            {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, payments.length)} of {payments.length}
           </p>
-          <div className="flex items-center gap-6">
-            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className={currentPage === 1 ? 'text-slate-200' : 'text-slate-500'}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256"><path d="M164.24,203.76a6,6,0,1,1-8.48,8.48l-80-80a6,6,0,0,1,0-8.48l80-80a6,6,0,0,1,8.48,8.48L88.49,128Z"></path></svg>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+              disabled={currentPage === 1} 
+              className={`p-2 rounded-lg transition-colors ${currentPage === 1 ? 'text-slate-200' : 'text-slate-500 hover:bg-white hover:shadow-sm'}`}
+            >
+              <ChevronLeft size={20} />
             </button>
-            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className={currentPage === totalPages ? 'text-slate-200' : 'text-slate-500'}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256"><path d="M181.66,133.66l-80,80a6,6,0,1,1-8.48-8.48L167.51,128,93.17,53.66a6,6,0,0,1,8.48-8.48l80,80A6,6,0,0,1,181.66,133.66Z"></path></svg>
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} 
+              disabled={currentPage === totalPages} 
+              className={`p-2 rounded-lg transition-colors ${currentPage === totalPages ? 'text-slate-200' : 'text-slate-500 hover:bg-white hover:shadow-sm'}`}
+            >
+              <ChevronRight size={20} />
             </button>
           </div>
        </div>
@@ -174,37 +210,45 @@ export default function AdminPayments() {
 
       {/* Verification Detail Sidebar */}
       {selectedPayment && (
-      <div className="fixed inset-0 z-[100] flex justify-end bg-slate-900/40 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[100] flex justify-end bg-slate-900/30 backdrop-blur-sm transition-opacity">
           <div className="absolute inset-0" onClick={() => setSelectedPayment(null)} />
           <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
             <div className="p-6 flex justify-between items-center border-b border-slate-100">
-              <h2 className="text-lg font-bold text-slate-800">Verification Detail</h2>
-              <button onClick={() => setSelectedPayment(null)} className="text-slate-400 hover:text-slate-600">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              <h2 className="text-lg font-bold text-slate-900">Slip Verification</h2>
+              <button onClick={() => setSelectedPayment(null)} className="text-slate-400 hover:text-slate-900 p-2 transition-colors">
+                <X size={20} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              <div className="bg-[#F1F4F5] p-4 rounded-2xl flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-blue-200 text-[#003D63] flex items-center justify-center font-bold text-lg">{selectedPayment.full_name.charAt(0)}</div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-8">
+              {/* User Header */}
+              <div className="bg-slate-50 p-5 rounded-2xl flex items-center gap-4 border border-slate-100">
+                <div className="h-12 w-12 rounded-xl bg-[#2563EB] text-white flex items-center justify-center font-bold text-lg">
+                  {selectedPayment.full_name.charAt(0)}
+                </div>
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Student Request</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Enrollment Request</p>
                   <p className="font-bold text-slate-900">{selectedPayment.full_name}</p>
-                  <p className="text-xs text-[#2B6390] font-medium">ID: {selectedPayment.student_id}</p>
+                  <p className="text-xs text-[#2563EB] font-bold">LKR {Number(selectedPayment.amount).toLocaleString()}</p>
                 </div>
               </div>
 
+              {/* Image Preview */}
               <div>
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-sm font-bold text-[#2D3335]">Uploaded Slip Image</h3>
-                  <a href={selectedPayment.proof_url} target="_blank" rel="noreferrer" className="text-xs font-bold text-blue-600 flex items-center gap-1 hover:underline">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256"><path d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"></path></svg>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Submitted Proof</h3>
+                  <a 
+                    href={selectedPayment.proof_url} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="text-[11px] font-bold text-blue-600 flex items-center gap-1 hover:underline"
+                  >
+                    <ExternalLink size={12} />
                     Open Full Size
                   </a>
                 </div>
           
-                {/* ✅ Image Container with Internal Popup Button */}
-                <div className="relative group rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-inner min-h-[300px] flex items-center justify-center">
+                <div className="relative group rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 shadow-inner min-h-[320px] flex items-center justify-center">
                   {proofSrc ? (
                     <>
                       <Image
@@ -212,29 +256,32 @@ export default function AdminPayments() {
                         alt="Uploaded Slip"
                         width={500}
                         height={500}
-                        className="w-full h-auto object-contain cursor-pointer"
+                        className="w-full h-auto object-contain cursor-pointer transition-transform group-hover:scale-[1.02]"
                         onClick={() => setShowZoomModal(true)}
                       />
-                      {/* ✅ Internal Popup Button */}
                       <button 
                         onClick={() => setShowZoomModal(true)}
-                        className="absolute bottom-4 right-4 bg-white/90 backdrop-blur p-3 rounded-xl shadow-lg border border-slate-200 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 text-[10px] font-black uppercase text-slate-700 tracking-tighter"
+                        className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md p-3 rounded-xl shadow-lg border border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 text-[10px] font-bold uppercase text-slate-700"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M168,128a40,40,0,1,1-40-40A40,40,0,0,1,168,128Zm74.34,103.17-54.34-54.35a80,80,0,1,0-11.32,11.32l54.35,54.34a8,8,0,0,0,11.31-11.31ZM48,128a64,64,0,1,1,64,64A64.07,64.07,0,0,1,48,128Z"></path></svg>
-                        Zoom Preview
+                        <Maximize2 size={14} />
+                        Zoom Slip
                       </button>
                     </>
                   ) : (
-                    <p className="text-slate-400">No Image Uploaded</p>
+                    <div className="text-center">
+                      <Clock size={32} className="mx-auto text-slate-200 mb-2" />
+                      <p className="text-slate-400 text-xs font-medium">Image unavailable</p>
+                    </div>
                   )}
                 </div>
               </div>
 
+              {/* Remarks */}
               <div>
-                <h3 className="text-sm font-bold text-[#2D3335] mb-2">Decision Feedback</h3>
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Verification Notes</h3>
                 <textarea 
-                  className="w-full p-4 bg-[#DEE3E6] border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500 placeholder:text-[#767C7E99]"
-                  placeholder="Enter rejection reason or internal notes..."
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-300"
+                  placeholder="Reason for rejection or internal notes..."
                   rows={4}
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
@@ -242,16 +289,20 @@ export default function AdminPayments() {
               </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 grid grid-cols-2 gap-4 bg-slate-50/50">
+            <div className="p-6 border-t border-slate-100 grid grid-cols-2 gap-3 bg-slate-50/50">
               <button 
                 onClick={() => { updateStatus(selectedPayment.id, 'rejected'); setSelectedPayment(null); }}
-                className="flex items-center justify-center gap-2 bg-[#b24343] text-white py-3 rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-red-700 transition-colors">
-                Reject Slip
+                className="flex items-center justify-center gap-2 bg-white text-red-600 border border-red-100 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wide hover:bg-red-50 transition-colors"
+              >
+                <XCircle size={16} />
+                Reject
               </button>
               <button 
                 onClick={() => { updateStatus(selectedPayment.id, 'approved'); setSelectedPayment(null); }}
-                className="flex items-center justify-center gap-2 bg-[#2d5a82] text-white py-3 rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-blue-800 transition-colors">
-                Approve & Enroll
+                className="flex items-center justify-center gap-2 bg-[#2563EB] text-white py-3.5 rounded-xl text-xs font-bold uppercase tracking-wide hover:bg-blue-700 transition-shadow shadow-md shadow-blue-100"
+              >
+                <CheckCircle size={16} />
+                Approve
               </button>
             </div>
           </div>

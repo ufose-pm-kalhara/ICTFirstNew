@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation'; // Added for navigation
-import { Plus, Calendar, Users, CreditCard, History, AlertCircle, Clock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, Calendar, Users, CreditCard, History, AlertCircle, ChevronRight, ArrowUpRight } from 'lucide-react';
 
 interface Student {
   id: number;
@@ -24,7 +24,7 @@ interface Payment {
 }
 
 export default function AdminDashboard() {
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
   const [students, setStudents] = useState<Student[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +57,6 @@ export default function AdminDashboard() {
     loadData();
   }, []);
 
-  // --- Logic Calculations ---
   const pendingApprovalCount = students.filter(s => s.status === 'Pending' || !s.student_id).length;
   const criticalPayments = payments.filter(p => p.status === 'pending').slice(0, 3);
   
@@ -71,148 +70,135 @@ export default function AdminDashboard() {
   const formattedPercentage = (percentageChange >= 0 ? "+" : "") + percentageChange.toFixed(0) + "%";
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
-      <main className="flex-1 p-6">
+    <div className="font-sans text-slate-900">
+      
+      {/* PAGE TITLE & DATE */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard Overview</h1>
+          <p className="text-slate-500 font-medium mt-1">
+            Welcome back, Mrs. Kalugampitiya. Here&apos;s your current status.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 bg-white border border-slate-100 py-2.5 px-5 rounded-2xl shadow-sm text-sm font-semibold text-slate-600">
+          <Calendar size={18} className="text-[#2563EB]" />
+          {formattedDate}
+        </div>
+      </div>
+
+      {/* --- TOP STATS GRID --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
         
-        {/* PAGE TITLE & DATE */}
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <h1 className="text-[30px] font-bold leading-[36px] tracking-[-0.75px] text-[#003D63]">Dashboard Overview</h1>
-            <p className="text-[18px] font-medium leading-[24px] tracking-[0px] text-gray-500 mt-1">
-              Welcome back, Mrs. Kalugampitiya. Here&apos;s what&apos;s happening today.
-            </p>
+        {/* Card 1: Pending Payments */}
+        <div 
+          className="bg-white p-7 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group" 
+          onClick={() => router.push('/admin/payments')}
+        >
+          <div className="flex justify-between items-start mb-6">
+            <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600">
+              <CreditCard size={24} />
+            </div>
+            <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-700 uppercase tracking-wider">Verification Needed</span>
           </div>
-          <div className="flex flex-row gap-x-3 items-center font-semibold text-[#2B6390] bg-[#E3EEF9] rounded-[0.8rem] py-2 px-6">
-            <Calendar size={16} strokeWidth={3} className="text-[#2B6390]" />
-            {formattedDate}
+          <p className="text-slate-500 text-sm font-semibold">Pending Payments</p>
+          <div className="flex items-baseline gap-2">
+            <h2 className="text-3xl font-bold text-slate-900">{payments.filter(p => p.status === 'pending').length}</h2>
+            <ArrowUpRight size={16} className="text-slate-300 group-hover:text-amber-500 transition-colors" />
           </div>
         </div>
 
-        {/* --- MAIN GRID --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 mb-10">
+        {/* Card 2: Total Students */}
+        <div 
+          className="bg-white p-7 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group" 
+          onClick={() => router.push('/admin/students')}
+        >
+          <div className="flex justify-between items-start mb-6">
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-[#2563EB]">
+              <Users size={24} />
+            </div>
+            <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-blue-100 text-[#1E40AF] uppercase tracking-wider">{formattedPercentage} Growth</span>
+          </div>
+          <p className="text-slate-500 text-sm font-semibold">Total Students</p>
+          <div className="flex items-baseline gap-2">
+            <h2 className="text-3xl font-bold text-slate-900">{students.length}</h2>
+            <ArrowUpRight size={16} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
+          </div>
+        </div>
+
+        {/* Quick Actions Panel */}
+        <div className="bg-[#2563EB] p-7 rounded-[2rem] text-white shadow-lg shadow-blue-100/50 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold">Quick Actions</h2>
+            <Plus size={20} className="opacity-60" />
+          </div>
           
-          <div className="flex flex-col gap-6">
-            {/* Card 1: Pending Payments */}
-            <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-50 flex flex-col justify-between h-52 relative overflow-hidden hover:shadow-xl transition-all cursor-pointer" onClick={() => router.push('/admin/payments')}>
-              <div className="flex justify-between items-start">
-                <div className="w-12 h-12 bg-[#FFFBEB] rounded-2xl flex items-center justify-center">
-                  <CreditCard size={32} strokeWidth={3} className="text-[#D97706]" />
-                </div>
-                <span className="text-[10px] font-black px-2 py-1 rounded bg-[#FFFBEB] text-[#D97706]">ACTION REQUIRED</span>
-              </div>
-              <div>
-                <p className="text-[#526070] text-sm font-bold">Pending Payments</p>
-                <h2 className="text-4xl text-slate-800 font-bold">{payments.filter(p => p.status === 'pending').length}</h2>
-              </div>
-            </div>
-
-            {/* Card 2: Total Students */}
-            <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-50 flex flex-col justify-between h-52 relative overflow-hidden hover:shadow-xl transition-all cursor-pointer" onClick={() => router.push('/admin/students')}>
-              <div className="flex justify-between items-start">
-                <div className="w-12 h-12 bg-[#F0FDF4] rounded-2xl flex items-center justify-center">
-                  <Users size={30} strokeWidth={3} className="text-[#2B6390]" />
-                </div>
-                <span className="text-[10px] font-black px-2 py-1 rounded bg-[#F0FDF4] text-[#16A34A]">{formattedPercentage} Growth</span>
-              </div>
-              <div>
-                <p className="text-[#526070] text-sm font-bold">Total Students</p>
-                <h2 className="text-4xl text-slate-800 font-bold">{students.length}</h2>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Actions & Pending Students Section */}
-          <div className="bg-[#2B6390] p-8 rounded-[2.5rem] text-white flex flex-col shadow-xl relative overflow-hidden h-full min-h-[440px]">
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full" />
-            
-            <h2 className="text-xl font-semibold mb-6 text-[#F6F9FF]">Quick Actions</h2>
-            
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              {/* NEW LESSON NAVIGATION */}
-              <button 
-                onClick={() => router.push('/admin/content')}
-                className="flex flex-col items-center justify-center aspect-square bg-white/10 rounded-2xl border border-white/20 hover:bg-white/20 transition-all active:scale-95"
-              >
-                <Plus size={24} />
-                <span className="text-[10px] font-bold uppercase mt-2">New Lesson</span>
-              </button>
-              
-              {/* PENDING APPROVAL NAVIGATION */}
-              <button 
-                onClick={() => router.push('/admin/students?tab=pending')}
-                className="flex flex-col items-center justify-center aspect-square bg-amber-500/20 rounded-2xl border border-amber-400/30 hover:bg-amber-500/30 transition-all active:scale-95"
-              >
-                <span className="text-2xl font-black">{pendingApprovalCount}</span>
-                <span className="text-[9px] font-bold uppercase text-center mt-1">Pending Approval</span>
-              </button>
-            </div>
-
-            <div className="mt-auto bg-white/10 p-5 rounded-3xl border border-white/10">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-3">Latest Pending</p>
-              {students.filter(s => !s.student_id).slice(0, 2).map(s => (
-                <div key={s.id} className="flex items-center gap-3 mb-3 last:mb-0">
-                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold">
-                    {s.full_name.charAt(0)}
-                  </div>
-                  <div className="overflow-hidden">
-                    <p className="text-xs font-bold truncate">{s.full_name}</p>
-                    <p className="text-[10px] opacity-60">Grade {s.grade}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="grid grid-cols-2 gap-3">
+            <button 
+              onClick={() => router.push('/admin/content')}
+              className="bg-white/10 hover:bg-white/20 border border-white/10 p-3 rounded-xl transition-all text-center"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-widest">New Lesson</p>
+            </button>
+            <button 
+              onClick={() => router.push('/admin/students?tab=pending')}
+              className="bg-white text-[#2563EB] p-3 rounded-xl transition-all text-center shadow-sm hover:bg-blue-50"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-widest">Review ({pendingApprovalCount})</p>
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* --- ROW 2: TABLES --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* --- ROW 2: ACTIVITY & CRITICAL DATA --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        {/* Critical Pending Payments */}
+        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-[16px] font-bold text-slate-900">Critical Pending Payments</h3>
+            <button onClick={() => router.push('/admin/payments')} className="text-[#2563EB] text-xs font-bold hover:underline">View All</button>
+          </div>
           
-          {/* Critical Pending Payments */}
-          <div className="bg-white p-8 rounded-[2.5rem] border border-gray-50 shadow-sm hover:shadow-xl transition-all">
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-[16px] font-bold text-[#2D3335]">Critical Pending Payments</h3>
-              <button onClick={() => router.push('/admin/payments')} className="text-[#2B6390] text-[12px] font-bold uppercase tracking-widest hover:underline">View All</button>
-            </div>
-            
-            <div className="space-y-4">
-              {criticalPayments.length > 0 ? criticalPayments.map(p => (
-                <div key={p.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors cursor-pointer" onClick={() => router.push(`/admin/payments/${p.id}`)}>
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-amber-100 rounded-xl text-amber-600"><AlertCircle size={18} /></div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800">{p.student_name || 'Student'}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Verification Required</p>
-                    </div>
+          <div className="space-y-3">
+            {criticalPayments.length > 0 ? criticalPayments.map(p => (
+              <div key={p.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-200 transition-all cursor-pointer" onClick={() => router.push(`/admin/payments/${p.id}`)}>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600"><AlertCircle size={18} /></div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-800">{p.student_name || 'New Student'}</p>
+                    <p className="text-[11px] font-semibold text-slate-400">Needs verification</p>
                   </div>
-                  <p className="font-black text-slate-700 text-sm">Rs. {p.amount || '0.00'}</p>
                 </div>
-              )) : (
-                <p className="text-center py-10 text-slate-300 font-bold text-xs uppercase">No critical payments</p>
-              )}
-            </div>
+                <p className="font-bold text-slate-900 text-sm">Rs. {p.amount.toLocaleString()}</p>
+              </div>
+            )) : (
+              <div className="text-center py-10">
+                <p className="text-slate-300 font-semibold text-sm">All payments processed</p>
+              </div>
+            )}
           </div>
-
-          {/* Recent Activity */}
-          <div className="bg-white p-8 rounded-[2.5rem] border border-gray-50 shadow-sm hover:shadow-xl transition-all">
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-[16px] font-bold text-[#2D3335]">Recent Activity</h3>
-              <History size={18} className="text-slate-300" />
-            </div>
-            <div className="space-y-6 relative before:absolute before:left-5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-50">
-              {students.slice(0, 4).map(s => (
-                <div key={s.id} className="relative pl-10 cursor-pointer group" onClick={() => router.push(`/admin/students/${s.id}`)}>
-                  <div className="absolute left-3.5 top-1 w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm group-hover:scale-125 transition-transform" />
-                  <p className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">New student registered</p>
-                  <p className="text-[11px] text-slate-500 font-medium">
-                    {s.full_name} joined Grade {s.grade}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
         </div>
-      </main>
+
+        {/* Recent Activity */}
+        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-[16px] font-bold text-slate-900">Recent Activity</h3>
+            <History size={18} className="text-slate-300" />
+          </div>
+          <div className="space-y-6 relative before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-100">
+            {students.slice(0, 4).map(s => (
+              <div key={s.id} className="relative pl-8 group cursor-pointer" onClick={() => router.push(`/admin/students/${s.id}`)}>
+                <div className="absolute left-0 top-1 w-5 h-5 rounded-full bg-white border-4 border-blue-500 shadow-sm group-hover:scale-110 transition-transform" />
+                <p className="text-sm font-bold text-slate-800 group-hover:text-[#2563EB] transition-colors">New student registered</p>
+                <p className="text-[12px] text-slate-500 font-medium">
+                  {s.full_name} joined Grade {s.grade}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
