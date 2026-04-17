@@ -245,7 +245,7 @@ function PaymentsContent() {
                 <p className="text-gray-800 font-bold">
                   Click to upload bank slip </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  JPEG, PNG, or PDF (Max 5MB) </p>
+                  JPEG or PNG (Max 2MB) </p>
                </>
               )}
             </label>
