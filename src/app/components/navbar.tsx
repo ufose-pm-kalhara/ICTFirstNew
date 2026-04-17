@@ -1,89 +1,48 @@
 'use client';
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 
-export default function Navbar() {
+interface NavbarProps {
+  onScroll: (id: string) => void;
+  onHome: () => void;
+}
+
+export default function Navbar({ onScroll, onHome }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const pathname = usePathname();
 
-  const navLinks = [
-    { name: 'Privacy', href: '/privacy' },
-    { name: 'Terms', href: '/terms' },
-    { name: 'FAQ', href: '/faq' },
-    { name: 'Contact', href: '/contact' },
-  ];
-
-  const isActive = (path: string) => pathname === path;
+  const handleNavClick = (id: string) => {
+    onScroll(id);
+    setIsOpen(false);
+  };
 
   return (
-    <nav className="sticky top-0 z-[100] w-full bg-white/80 backdrop-blur-md border-b border-slate-100">
-      <div className="max-w-7xl mx-auto px-6 md:px-10">
-        <div className="flex justify-between items-center h-20">
-          
-          {/* LOGO */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="font-black text-2xl text-[#1A5683] italic tracking-[0.2em] transition-transform group-hover:scale-105">
-              ICTFIRST<span className="text-slate-900">.LK</span>
-            </span>
-          </Link>
+    <nav className="sticky top-0 z-[100] w-full bg-white/95 backdrop-blur-md border-b border-slate-100 h-20 flex items-center">
+      <div className="max-w-7xl mx-auto px-6 w-full flex justify-between items-center">
+        <button onClick={onHome} className="flex items-center gap-2 cursor-pointer outline-none group">
+            <div className="w-10 h-10 bg-[#1A5683] group-hover:bg-red-600 transition-colors rounded-lg flex items-center justify-center font-bold text-white text-xs">ICT</div>
+            <span className="font-black text-xl text-slate-900 tracking-tight">FIRST<span className="text-[#1A5683]">.lk</span></span>
+        </button>
 
-          {/* DESKTOP LINKS */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors hover:text-[#1A5683] ${
-                  isActive(link.href) ? 'text-[#1A5683]' : 'text-slate-400'
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
-            
-            <Link 
-              href="/login" 
-              className="ml-4 px-6 py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#1A5683] transition-all active:scale-95 shadow-lg shadow-slate-200"
-            >
-              Login
-            </Link>
-          </div>
-
-          {/* MOBILE TOGGLE */}
-          <button 
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-slate-900 p-2"
-          >
-            <div className="w-6 h-0.5 bg-current mb-1.5" />
-            <div className="w-6 h-0.5 bg-current mb-1.5" />
-            <div className="w-4 h-0.5 bg-current ml-auto" />
-          </button>
+        <div className="hidden md:flex items-center gap-10 text-sm font-bold text-slate-500 uppercase tracking-widest">
+          <button onClick={() => handleNavClick('results')} className="hover:text-[#1A5683] transition-colors cursor-pointer outline-none">Results</button>
+          <button onClick={() => handleNavClick('achievers')} className="hover:text-[#1A5683] transition-colors cursor-pointer outline-none">Achievers</button>
+          <button onClick={() => handleNavClick('gallery')} className="hover:text-[#1A5683] transition-colors cursor-pointer outline-none">Gallery</button>
+          <Link href="/login" className="px-8 py-2.5 bg-[#1A5683] text-white rounded-xl shadow-lg hover:bg-red-600 transition-all">Login</Link>
         </div>
+
+        <button className="md:hidden p-2" onClick={() => setIsOpen(!isOpen)}>
+          <div className={`w-6 h-0.5 bg-slate-900 mb-1.5 transition-all ${isOpen ? 'rotate-45 translate-y-2' : ''}`}></div>
+          <div className={`w-6 h-0.5 bg-slate-900 mb-1.5 ${isOpen ? 'opacity-0' : ''}`}></div>
+          <div className={`w-6 h-0.5 bg-slate-900 ml-auto transition-all ${isOpen ? '-rotate-45 -translate-y-2 w-6' : ''}`}></div>
+        </button>
       </div>
 
-      {/* MOBILE MENU */}
       {isOpen && (
-        <div className="md:hidden bg-white border-b border-slate-100 animate-in slide-in-from-top duration-300">
-          <div className="flex flex-col p-6 gap-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                onClick={() => setIsOpen(false)}
-                className="text-[11px] font-black uppercase tracking-widest text-slate-600 border-b border-slate-50 pb-2"
-              >
-                {link.name}
-              </Link>
-            ))}
-            <Link 
-              href="/login"
-              className="w-full py-4 bg-slate-900 text-white text-center rounded-2xl font-black uppercase tracking-widest text-[11px]"
-            >
-              Student Login
-            </Link>
-          </div>
+        <div className="absolute top-20 left-0 w-full bg-white border-b border-slate-100 p-6 flex flex-col gap-6 font-bold text-slate-600 md:hidden shadow-xl">
+          <button onClick={() => handleNavClick('results')} className="text-left outline-none">Results</button>
+          <button onClick={() => handleNavClick('achievers')} className="text-left outline-none">Achievers</button>
+          <button onClick={() => handleNavClick('gallery')} className="text-left outline-none">Gallery</button>
+          <Link href="/login" className="bg-[#1A5683] text-white p-4 rounded-xl text-center">Login</Link>
         </div>
       )}
     </nav>
