@@ -47,9 +47,9 @@ export default function LessonDetailPage() {
   const [isBlocked, setIsBlocked] = useState<boolean>(false);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'video' | 'notes'>('video');
-  
-  // Track selected index instead of just the URL to manage separate views
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
+
+  const brandGradient = 'linear-gradient(135deg, #2B6390 0%, #1A5783 100%)';
 
   const videoList = useMemo((): VideoItem[] => {
     if (!lesson?.video_url) return [];
@@ -64,14 +64,12 @@ export default function LessonDetailPage() {
     return lesson.material_id.split(',').map(m => m.trim()).filter(m => m !== "");
   }, [lesson?.material_id]);
 
-  // NEW: Logic to refresh view counts whenever the lesson OR the selected part changes
   useEffect(() => {
     if (lesson) {
       const viewKey = `view_count_${lesson.id}_part_${selectedIndex}_v${lesson.reset_token || 0}`;
       const current = parseInt(localStorage.getItem(viewKey) || '0', 10);
       setViewCount(current);
       setIsBlocked(current >= 3);
-      // Reset video "start" state when switching parts
       setHasStarted(false); 
     }
   }, [lesson, selectedIndex]);
@@ -101,7 +99,6 @@ export default function LessonDetailPage() {
         const found = lessonData.lessons.find((l: Lesson) => l.id === Number(id));
         if (found) { 
           setLesson(found);
-          // Auto-switch to notes if no videos exist
           if (!found.video_url || found.video_url === "[]") setActiveTab('notes');
         }
       }
@@ -121,29 +118,32 @@ export default function LessonDetailPage() {
   };
 
   if (loading || !lesson) return (
-    <div className="min-h-screen flex items-center justify-center font-black text-[#1A5683] animate-pulse italic uppercase tracking-[0.3em]">ICTFIRST.lk</div>
+    <div className="min-h-screen flex items-center justify-center font-black text-[#1A5783] animate-pulse italic uppercase tracking-widest">ICTFIRST.lk</div>
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans select-none">
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-[60] px-4 py-4">
+    <div className="min-h-screen bg-[#F8FAFC] pb-20 select-none">
+      {/* Top Header */}
+      <div className="bg-white border-b border-slate-100 sticky top-0 z-[60] px-6 py-4 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-500 font-bold text-[11px] uppercase tracking-widest hover:text-[#1A5683]">
-            <ChevronLeft size={18} /> Back
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 font-bold text-[13px] uppercase tracking-wider hover:text-[#1A5783] transition-colors">
+            <ChevronLeft size={20} /> Back to Hub
           </button>
-          <div className="flex items-center gap-3">
-            <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full ${viewCount >= 3 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'}`}>
-              Part {selectedIndex + 1} Views: {viewCount}/3
-            </span>
+          <div className="flex items-center gap-4">
+            <div className={`px-4 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-tight ${viewCount >= 3 ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-[#1A5783]'}`}>
+              Part {selectedIndex + 1} • {3 - viewCount} Views Left
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 lg:px-10 py-6 md:py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8 md:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          
           <div className="lg:col-span-8">
+            {/* Video Section */}
             {videoList.length > 0 ? (
-              <div className="relative w-full aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl mb-8 border-4 border-white isolate">
+              <div className="relative w-full aspect-video bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl mb-10 border-[6px] border-white ring-1 ring-slate-200">
                 {!isBlocked ? (
                   hasStarted ? (
                     <div className="relative w-full h-full">
@@ -154,53 +154,83 @@ export default function LessonDetailPage() {
                         allowFullScreen 
                         allow="autoplay" 
                       />
-                      <div className="absolute inset-0 pointer-events-none z-10" />
-                      <div className="absolute z-[100] pointer-events-none text-white/10" style={{ top: corners[cornerIndex].top, left: corners[cornerIndex].left }}>
-                        <p className="font-black text-[10px] uppercase leading-none">{user?.full_name}</p>
-                        <p className="font-bold text-[8px] tracking-widest mt-1">{user?.student_id}</p>
+                      {/* Watermark */}
+                      <div className="absolute z-[100] pointer-events-none text-white/10 mix-blend-overlay" style={{ top: corners[cornerIndex].top, left: corners[cornerIndex].left }}>
+                        <p className="font-black text-[14px] uppercase leading-none tracking-tighter">{user?.full_name}</p>
+                        <p className="font-bold text-[10px] tracking-widest mt-1 opacity-50">{user?.student_id}</p>
                       </div>
                     </div>
                   ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900">
-                      <button onClick={handleStartVideo} className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-all">
-                        <Play fill="#1A5683" className="text-[#1A5683] ml-1" size={32} />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950">
+                      <button 
+                        onClick={handleStartVideo} 
+                        style={{ background: brandGradient }}
+                        className="w-24 h-24 rounded-full flex items-center justify-center shadow-3xl hover:scale-110 transition-all group"
+                      >
+                        <Play fill="white" className="text-white ml-1 group-hover:scale-110 transition-transform" size={40} />
                       </button>
-                      <p className="text-white font-black uppercase italic tracking-[0.2em] text-[10px] mt-6">Watch {videoList[selectedIndex].desc}</p>
+                      <p className="text-white/40 font-bold uppercase tracking-[0.3em] text-[11px] mt-8">Initialize {videoList[selectedIndex].desc}</p>
                     </div>
                   )
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 text-white p-6 text-center">
-                    <Lock size={48} className="text-red-500 mb-4" />
-                    <h2 className="text-2xl font-black uppercase italic tracking-tighter">Part Limit Reached</h2>
-                    <p className="opacity-60 text-[10px] font-bold uppercase mt-2">Contact Mrs. Dinushika for a view reset.</p>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 text-white p-10 text-center">
+                    <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center mb-6">
+                        <Lock size={40} className="text-red-500" />
+                    </div>
+                    <h2 className="text-3xl font-black uppercase tracking-tight">Access Exhausted</h2>
+                    <p className="text-slate-400 text-sm font-medium mt-3 max-w-xs">You have utilized all 3 permitted views for this part. Please contact the administrator for a reset.</p>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="bg-blue-50 border-2 border-dashed border-blue-200 rounded-3xl p-12 text-center mb-8">
-                <Video size={40} className="mx-auto text-blue-300 mb-4" />
-                <p className="text-blue-500 font-black uppercase text-[11px] tracking-widest">No Video Tutorial</p>
+              <div className="bg-blue-50/50 border-2 border-dashed border-blue-100 rounded-[2.5rem] p-16 text-center mb-10">
+                <Video size={48} className="mx-auto text-blue-200 mb-4" />
+                <p className="text-blue-400 font-bold uppercase text-[12px] tracking-widest">No Video Content Uploaded</p>
               </div>
             )}
 
-            <div className="flex gap-2 p-1 bg-slate-200/50 rounded-2xl mb-6 w-fit">
-              <button onClick={() => setActiveTab('video')} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'video' ? 'bg-white text-[#1A5683] shadow-sm' : 'text-slate-500'}`}>Content</button>
-              <button onClick={() => setActiveTab('notes')} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'notes' ? 'bg-white text-[#1A5683] shadow-sm' : 'text-slate-500'}`}>Notes</button>
+            {/* Tab Navigation */}
+            <div className="flex gap-2 p-1.5 bg-slate-200/50 rounded-2xl mb-8 w-fit backdrop-blur-sm">
+              <button 
+                onClick={() => setActiveTab('video')} 
+                className={`px-8 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all ${activeTab === 'video' ? 'bg-white text-[#1A5783] shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Curriculum
+              </button>
+              <button 
+                onClick={() => setActiveTab('notes')} 
+                className={`px-8 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all ${activeTab === 'notes' ? 'bg-white text-[#1A5783] shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Study Notes
+              </button>
             </div>
 
+            {/* Tab Content */}
             {activeTab === 'video' ? (
-              <div className="space-y-6">
-                <h1 className="text-3xl md:text-5xl font-black text-slate-900 uppercase italic tracking-tighter leading-none mb-4">{lesson.title}</h1>
-                <p className="text-slate-500 text-sm md:text-base font-medium">{lesson.description || "Learn the fundamentals of this lesson."}</p>
+              <div className="space-y-8">
+                <div>
+                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none mb-6">{lesson.title}</h1>
+                    <div className="bg-[#F0F5FA] inline-block px-4 py-2 rounded-xl text-[#1A5783] font-bold text-sm mb-6">Grade {lesson.grade} Module</div>
+                    <p className="text-slate-500 text-[16px] leading-relaxed font-medium max-w-3xl">{lesson.description || "In-depth module covering core ICT principles and practical applications for this session."}</p>
+                </div>
                 
                 {videoList.length > 1 && (
-                  <div className="mt-8">
-                    <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-4">Select Video Part</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="mt-12">
+                    <h3 className="text-[12px] font-bold uppercase text-slate-400 tracking-widest mb-6">Module Breakdown</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {videoList.map((item, idx) => (
-                        <button key={idx} onClick={() => setSelectedIndex(idx)} className={`p-4 rounded-2xl border-2 text-left transition-all ${selectedIndex === idx ? 'border-[#1A5683] bg-blue-50 text-[#1A5683]' : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'}`}>
-                          <p className="font-black text-[10px] uppercase">Part {idx + 1}</p>
-                          <p className="text-[11px] font-bold text-slate-600 uppercase mt-1 truncate">{item.desc}</p>
+                        <button 
+                          key={idx} 
+                          onClick={() => setSelectedIndex(idx)} 
+                          className={`p-5 rounded-2xl border-2 text-left transition-all flex items-center gap-4 ${selectedIndex === idx ? 'border-[#1A5683] bg-white shadow-xl' : 'border-slate-100 bg-white hover:border-slate-200 opacity-60'}`}
+                        >
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${selectedIndex === idx ? 'bg-[#1A5683] text-white' : 'bg-slate-100 text-slate-400'}`}>
+                            {idx + 1}
+                          </div>
+                          <div>
+                            <p className={`font-bold text-[14px] ${selectedIndex === idx ? 'text-slate-900' : 'text-slate-500'}`}>{item.desc}</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter">Part {idx + 1}</p>
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -208,31 +238,66 @@ export default function LessonDetailPage() {
                 )}
               </div>
             ) : (
-              <div className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                <h3 className="font-black uppercase text-[11px] tracking-[0.2em] mb-6 text-[#1A5683]">Instructor Notes</h3>
-                <div className="prose prose-slate max-w-none text-slate-700 font-medium whitespace-pre-wrap">{lesson.notes || "No notes provided."}</div>
+              <div className="bg-white p-10 md:p-14 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
+                <h3 className="font-black uppercase text-[12px] tracking-widest mb-8 text-[#1A5683] flex items-center gap-2">
+                    <FileText size={16} /> Lecture Summary
+                </h3>
+                <div className="prose prose-slate max-w-none text-slate-600 font-medium text-[16px] leading-loose whitespace-pre-wrap">
+                    {lesson.notes || "Comprehensive study notes are being finalized for this lesson."}
+                </div>
               </div>
             )}
           </div>
 
+          {/* Sidebar - Materials */}
           <div className="lg:col-span-4">
-            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm sticky top-28">
-              <h3 className="font-black text-slate-900 uppercase text-[11px] tracking-[0.2em] mb-8">Study Material</h3>
+            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm sticky top-32">
+              <h3 className="font-black text-slate-900 uppercase text-[13px] tracking-wider mb-8 flex items-center gap-2">
+                <Download size={18} className="text-[#1A5683]" /> Downloadables
+              </h3>
               {materialList.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {materialList.map((mid, idx) => (
-                    <a key={idx} href={`/api/admin/content?fileId=${mid}`} download className="flex items-center justify-between p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-[#1A5683] transition-all group">
-                      <div>
-                        <p className="font-black text-slate-800 text-[10px] uppercase italic">Download Note {idx + 1}</p>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">PDF File</p>
+                    <a 
+                      key={idx} 
+                      href={`/api/admin/content?fileId=${mid}`} 
+                      download 
+                      className="flex items-center justify-between p-5 bg-[#F8FAFC] rounded-2xl border border-transparent hover:border-[#1A5683] hover:bg-white hover:shadow-lg transition-all group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-red-400 group-hover:scale-110 transition-transform">
+                            <FileText size={24} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-800 text-[14px]">Lesson PDF {idx + 1}</p>
+                          <p className="text-[11px] text-slate-400 font-bold uppercase">Study Material</p>
+                        </div>
                       </div>
-                      <div className="w-10 h-10 bg-white group-hover:bg-[#1A5683] group-hover:text-white rounded-xl flex items-center justify-center transition-all"><Download size={16} /></div>
+                      <div className="w-10 h-10 bg-white border border-slate-100 group-hover:bg-[#1A5683] group-hover:text-white group-hover:border-transparent rounded-xl flex items-center justify-center transition-all">
+                        <Download size={18} />
+                      </div>
                     </a>
                   ))}
                 </div>
-              ) : <p className="text-center text-slate-300 font-black text-[10px] uppercase py-10">No PDFs Available</p>}
+              ) : (
+                <div className="text-center py-12 border-2 border-dashed border-slate-50 rounded-3xl">
+                    <p className="text-slate-300 font-bold text-[13px] uppercase tracking-widest">No Documents</p>
+                </div>
+              )}
+              
+              <div className="mt-10 p-5 bg-orange-50 rounded-2xl border border-orange-100">
+                <div className="flex items-center gap-2 text-orange-600 mb-2">
+                    <Info size={16} />
+                    <p className="font-bold text-[12px] uppercase">Safety Note</p>
+                </div>
+                <p className="text-orange-700/70 text-[12px] font-medium leading-snug">
+                    Each video part is limited to 3 views. Closing the tab or refreshing will count as a view.
+                </p>
+              </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>

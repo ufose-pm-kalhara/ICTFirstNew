@@ -122,7 +122,7 @@ export default function Hero() {
           {/* Hero Visuals: Teacher's portrait and floating award badge */}
           <div className="w-full md:w-[45%] relative flex justify-center md:justify-end items-end h-[450px] md:h-[700px] mt-10 md:mt-0">
             <div className="relative w-full h-full md:-ml-32 lg:-ml-48">
-              <Image src="/miss_dinushika_01.png" alt="Teacher" fill className="object-contain object-bottom scale-125 md:scale-150 drop-shadow-[0_30px_60px_rgba(0,0,0,0.25)]" priority />
+              <Image src="/missdinushika01.jpeg" alt="Teacher" fill className="object-contain object-bottom scale-125 md:scale-150 drop-shadow-[0_30px_60px_rgba(0,0,0,0.25)]" priority />
               <div className="absolute top-10 right-4 md:right-10 bg-red-600 text-white w-24 h-24 md:w-36 md:h-36 rounded-full flex flex-col items-center justify-center text-3xl md:text-5xl shadow-2xl z-20 animate-bounce font-black border-8 border-white">
                 A+
                 <span className="text-[10px] uppercase tracking-widest mt-1 font-bold">Target</span>

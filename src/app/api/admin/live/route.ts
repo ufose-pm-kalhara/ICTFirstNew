@@ -26,27 +26,36 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const { title, url, month, grade, announcement, lesson_id } = await req.json();
-    
-    // Check if entry exists for this month and grade
-    const [existing] = await pool.query<RowDataPacket[]>(
-      'SELECT id FROM live_links WHERE month = ? AND grade = ?', 
-      [month, grade]
-    );
+    const body = await req.json();
+    const { id, title, url, announcement, lesson_id, class_date, class_time } = body;
 
-    if (existing.length > 0) {
+    // We need to find the month and grade to identify which card this live session belongs to.
+    // If your table for lessons isn't named "lessons", we'll pull them from the request body.
+    // Ensure your frontend is sending month and grade in the handleSubmit form state.
+    const month = body.month; 
+    const grade = body.grade;
+
+    // 1. Check if we are updating an existing entry by ID
+    if (id) {
       await pool.query(
-        'UPDATE live_links SET title = ?, url = ?, announcement = ?, lesson_id = ? WHERE id = ?',
-        [title, url, announcement, lesson_id, existing[0].id]
+        `UPDATE live_links 
+         SET title = ?, url = ?, announcement = ?, lesson_id = ?, class_date = ?, class_time = ?
+         WHERE id = ?`,
+        [title, url, announcement, lesson_id, class_date, class_time, id]
       );
     } else {
+      // 2. INSERT new session
       await pool.query(
-        'INSERT INTO live_links (title, url, month, grade, announcement, lesson_id, start_time, created_by) VALUES (?, ?, ?, ?, ?, ?, NOW(), 1)',
-        [title, url, month, grade, announcement, lesson_id]
+        `INSERT INTO live_links 
+         (title, url, month, grade, announcement, lesson_id, class_date, class_time, start_time, created_by) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1)`,
+        [title, url, month, grade, announcement, lesson_id, class_date, class_time]
       );
     }
+    
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error("Database Error:", error);
     return NextResponse.json({ success: false }, { status: 500 });
   }
 }

@@ -73,35 +73,41 @@ export default function StudentProfile() {
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-black text-[#1A5683] italic text-2xl uppercase">ICTFIRST.lk</div>;
-  if (!student) return <div className="p-20 text-center font-bold">Session expired. Please login again.</div>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center font-black text-[#1A5783] italic text-2xl uppercase tracking-widest">
+      ICTFIRST.lk
+    </div>
+  );
+
+  if (!student) return <div className="p-20 text-center font-bold text-slate-400">Session expired. Please login again.</div>;
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-20 font-sans select-none">
+    <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans select-none">
       <main className="max-w-6xl mx-auto px-6 pt-16">
         
         {/* Profile Header */}
         <div className="flex flex-col items-center mb-16">
           <div className="relative group">
-            <div className="w-32 h-32 rounded-full border-[6px] border-white shadow-2xl overflow-hidden bg-slate-100 ring-1 ring-slate-100 relative">
+            <div className="w-36 h-36 rounded-full border-[6px] border-white shadow-2xl overflow-hidden bg-slate-100 ring-1 ring-slate-100 relative">
               <img 
-                src={student.profile_image || `https://ui-avatars.com/api/?name=${student.full_name}&background=1A5683&color=fff`} 
+                src={student.profile_image || `https://ui-avatars.com/api/?name=${student.full_name}&background=1A5783&color=fff`} 
                 alt="Profile" 
                 className="w-full h-full object-cover" 
               />
-              <button className="absolute bottom-0 right-0 bg-[#1A5683] p-2 rounded-full border-2 border-white text-white scale-90 hover:scale-105 transition-transform">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+              <button className="absolute bottom-1 right-1 bg-[#1A5783] p-2.5 rounded-full border-4 border-white text-white shadow-lg hover:scale-110 transition-transform">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
               </button>
             </div>
           </div>
-          <h1 className="text-4xl font-black text-slate-800 mt-6 tracking-tighter uppercase italic leading-none">{student.full_name}</h1>
+          <h1 className="text-4xl font-black text-slate-800 mt-8 tracking-tighter uppercase italic leading-none">{student.full_name}</h1>
           
-          {/* ✅ STUDENT ID ADDED HERE */}
-          <div className="mt-4 flex flex-col items-center gap-2">
-            <span className="bg-[#1A5683] text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-blue-900/20">
-              ID: {student.student_id}
+          <div className="mt-5 flex flex-col items-center gap-3">
+            <span className="bg-[#1A5783] text-white text-[11px] font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-xl shadow-blue-900/10">
+              Student ID: {student.student_id}
             </span>
-            <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">Grade {student.grade} • ICT Student</p>
+            <p className="text-slate-400 font-bold text-[11px] uppercase tracking-[0.2em]">Grade {student.grade} • Registered Student</p>
           </div>
         </div>
 
@@ -109,56 +115,59 @@ export default function StudentProfile() {
           
           {/* LEFT COLUMN: Identity & Connectivity */}
           <div className="space-y-10">
-            <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-50">
-              <h3 className="font-black text-slate-800 mb-8 flex items-center gap-3 uppercase text-sm tracking-tight italic">
-                <span className="w-6 h-6 bg-blue-50 text-[#1A5683] rounded-lg flex items-center justify-center not-italic">🪪</span> Personal Identity
+            <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
+              <h3 className="font-black text-slate-800 mb-10 flex items-center gap-3 uppercase text-[13px] tracking-wider italic">
+                <span className="w-8 h-8 bg-[#F0F5FA] text-[#1A5783] rounded-xl flex items-center justify-center not-italic">🪪</span> Identity Details
               </h3>
-              <div className="space-y-6">
+              <div className="space-y-7">
                 <div>
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Full Name</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Full Legal Name</label>
                   <input 
                     type="text" 
                     value={student.full_name}
                     onChange={(e) => setStudent({...student, full_name: e.target.value})}
-                    className="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-[#1A5683]/10 border border-transparent focus:border-[#1A5683]/20 font-bold text-slate-700 transition-all"
+                    className="w-full p-4.5 bg-slate-50 rounded-2xl outline-none focus:ring-4 focus:ring-[#1A5783]/5 border border-transparent focus:border-[#1A5783]/10 font-bold text-slate-700 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Grade Level</label>
-                  <select 
-                    value={student.grade}
-                    onChange={(e) => setStudent({...student, grade: parseInt(e.target.value)})}
-                    className="w-full p-4 bg-slate-50 rounded-2xl outline-none appearance-none font-bold text-slate-700 border border-transparent focus:border-[#1A5683]/20 cursor-pointer"
-                  >
-                    <option value={10}>Grade 10</option>
-                    <option value={11}>Grade 11</option>
-                  </select>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Academic Grade</label>
+                  <div className="relative">
+                    <select 
+                      value={student.grade}
+                      onChange={(e) => setStudent({...student, grade: parseInt(e.target.value)})}
+                      className="w-full p-4.5 bg-slate-50 rounded-2xl outline-none appearance-none font-bold text-slate-700 border border-transparent focus:border-[#1A5783]/10 cursor-pointer"
+                    >
+                      <option value={10}>Grade 10</option>
+                      <option value={11}>Grade 11</option>
+                    </select>
+                    <span className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</span>
+                  </div>
                 </div>
               </div>
             </section>
 
-            <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-50">
-              <h3 className="font-black text-slate-800 mb-8 flex items-center gap-3 uppercase text-sm tracking-tight italic">
-                <span className="w-6 h-6 bg-blue-50 text-[#1A5683] rounded-lg flex items-center justify-center not-italic">@</span> Connectivity
+            <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
+              <h3 className="font-black text-slate-800 mb-10 flex items-center gap-3 uppercase text-[13px] tracking-wider italic">
+                <span className="w-8 h-8 bg-[#F0F5FA] text-[#1A5783] rounded-xl flex items-center justify-center not-italic">@</span> Contact Information
               </h3>
-              <div className="space-y-6">
+              <div className="space-y-7">
                 <div>
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Email Address</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Login Email (Read-only)</label>
                   <div className="relative">
-                    <input type="text" value={student.email} disabled className="w-full p-4 pl-12 bg-slate-50 rounded-2xl font-bold text-slate-400 border border-slate-100" />
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">✉️</span>
+                    <input type="text" value={student.email} disabled className="w-full p-4.5 pl-12 bg-slate-50 rounded-2xl font-bold text-slate-400 border border-slate-100 opacity-60 cursor-not-allowed" />
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2">✉️</span>
                   </div>
                 </div>
                 <div>
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">WhatsApp Number</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">WhatsApp Connectivity</label>
                   <div className="relative">
                     <input 
                       type="text" 
                       value={student.phone}
                       onChange={(e) => setStudent({...student, phone: e.target.value})}
-                      className="w-full p-4 pl-12 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-[#1A5683]/10 font-bold text-slate-700 transition-all"
+                      className="w-full p-4.5 pl-12 bg-slate-50 rounded-2xl outline-none focus:ring-4 focus:ring-[#1A5783]/5 font-bold text-slate-700 transition-all"
                     />
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">📞</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2">📞</span>
                   </div>
                 </div>
               </div>
@@ -167,61 +176,58 @@ export default function StudentProfile() {
 
           {/* RIGHT COLUMN: Security & Access */}
           <div>
-            <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-50 h-full">
-              <h3 className="font-black text-slate-800 mb-8 flex items-center gap-3 uppercase text-sm tracking-tight italic">
-                <span className="w-6 h-6 bg-blue-50 text-[#1A5683] rounded-lg flex items-center justify-center not-italic">🛡️</span> Security & Access
+            <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 h-full">
+              <h3 className="font-black text-slate-800 mb-10 flex items-center gap-3 uppercase text-[13px] tracking-wider italic">
+                <span className="w-8 h-8 bg-[#F0F5FA] text-[#1A5783] rounded-xl flex items-center justify-center not-italic">🛡️</span> Security & Credentials
               </h3>
-              <div className="space-y-6">
+              <div className="space-y-7">
                 
-                {/* Current Password with Visibility Toggle */}
                 <div className="relative">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Current Password</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Current Password</label>
                   <input 
                     type={showCurrent ? "text" : "password"} 
                     placeholder="••••••••"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full p-4 pr-12 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-[#1A5683]/10 font-bold text-slate-700 transition-all"
+                    className="w-full p-4.5 pr-14 bg-slate-50 rounded-2xl outline-none focus:ring-4 focus:ring-[#1A5783]/5 font-bold text-slate-700 transition-all border border-transparent focus:border-[#1A5783]/10"
                   />
                   <button 
                     onClick={() => setShowCurrent(!showCurrent)}
-                    className="absolute right-4 top-[38px] text-slate-300 hover:text-[#1A5683] transition-colors"
+                    className="absolute right-5 top-[46px] text-slate-300 hover:text-[#1A5783] transition-colors"
                   >
                     {showCurrent ? '🔒' : '👁️'}
                   </button>
                 </div>
 
-                {/* New Password with Visibility Toggle */}
                 <div className="relative">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">New Password</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">New Password</label>
                   <input 
                     type={showNew ? "text" : "password"} 
-                    placeholder="Enter new password"
+                    placeholder="Minimum 8 characters"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full p-4 pr-12 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-[#1A5683]/10 font-bold text-slate-700 transition-all"
+                    className="w-full p-4.5 pr-14 bg-slate-50 rounded-2xl outline-none focus:ring-4 focus:ring-[#1A5783]/5 font-bold text-slate-700 transition-all border border-transparent focus:border-[#1A5783]/10"
                   />
                   <button 
                     onClick={() => setShowNew(!showNew)}
-                    className="absolute right-4 top-[38px] text-slate-300 hover:text-[#1A5683] transition-colors"
+                    className="absolute right-5 top-[46px] text-slate-300 hover:text-[#1A5783] transition-colors"
                   >
                     {showNew ? '🔒' : '👁️'}
                   </button>
                 </div>
 
-                {/* Confirm Password with Visibility Toggle */}
                 <div className="relative">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Confirm New Password</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Verify New Password</label>
                   <input 
                     type={showConfirm ? "text" : "password"} 
-                    placeholder="Confirm new password"
+                    placeholder="Repeat new password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full p-4 pr-12 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-[#1A5683]/10 font-bold text-slate-700 transition-all"
+                    className="w-full p-4.5 pr-14 bg-slate-50 rounded-2xl outline-none focus:ring-4 focus:ring-[#1A5783]/5 font-bold text-slate-700 transition-all border border-transparent focus:border-[#1A5783]/10"
                   />
                   <button 
                     onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-4 top-[38px] text-slate-300 hover:text-[#1A5683] transition-colors"
+                    className="absolute right-5 top-[46px] text-slate-300 hover:text-[#1A5783] transition-colors"
                   >
                     {showConfirm ? '🔒' : '👁️'}
                   </button>
@@ -230,15 +236,15 @@ export default function StudentProfile() {
                 <button 
                   onClick={handleUpdatePassword}
                   disabled={passLoading}
-                  className="w-full py-4 bg-[#1A5683] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-900 transition-all shadow-lg shadow-blue-900/10 active:scale-[0.98]"
+                  className="w-full py-4.5 bg-[#1A5783] text-white rounded-2xl font-bold text-[13px] uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-xl shadow-blue-900/10 active:scale-[0.98] mt-4"
                 >
-                  {passLoading ? 'Updating...' : 'Update Password'} <span>🔄</span>
+                  {passLoading ? 'Syncing...' : 'Update Password'} <span>🔄</span>
                 </button>
 
-                <div className="mt-8 p-6 bg-blue-50/50 rounded-3xl border border-blue-100 flex gap-4">
-                  <span className="text-xl">ℹ️</span>
-                  <p className="text-[11px] font-bold text-[#1A5683] leading-relaxed">
-                    Ensure your password is at least 12 characters long with a mix of letters and symbols.
+                <div className="mt-10 p-7 bg-[#F0F5FA] rounded-[2rem] border border-blue-50 flex gap-4">
+                  <span className="text-xl">💡</span>
+                  <p className="text-[12px] font-bold text-[#1A5683] leading-relaxed">
+                    Protect your account by using a strong password. We recommend a mix of numbers, symbols, and uppercase letters.
                   </p>
                 </div>
               </div>
@@ -246,18 +252,18 @@ export default function StudentProfile() {
           </div>
         </div>
 
-        <div className="mt-16 flex justify-center items-center gap-4">
+        <div className="mt-16 flex flex-col sm:flex-row justify-center items-center gap-5">
           <button 
             onClick={() => window.location.reload()} 
-            className="px-10 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all"
+            className="w-full sm:w-auto px-12 py-4.5 bg-white text-slate-400 border border-slate-200 rounded-2xl font-bold text-[13px] uppercase tracking-widest hover:bg-slate-50 transition-all"
           >
             Discard Changes
           </button>
           <button 
             onClick={handleUpdateProfile} 
-            className="px-12 py-4 bg-[#1A5683] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-900/20 hover:scale-105 transition-all active:scale-95"
+            className="w-full sm:w-auto px-16 py-4.5 bg-[#1A5783] text-white rounded-2xl font-bold text-[13px] uppercase tracking-widest shadow-2xl shadow-blue-900/20 hover:scale-105 transition-all active:scale-95"
           >
-            Save Profile
+            Save Account Profile
           </button>
         </div>
       </main>

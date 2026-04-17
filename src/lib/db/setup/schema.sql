@@ -182,3 +182,7 @@ ADD CONSTRAINT fk_live_lesson FOREIGN KEY (lesson_id) REFERENCES recorded_lesson
 
 ALTER TABLE students 
 ADD COLUMN status VARCHAR(20) DEFAULT 'Pending';
+
+ALTER TABLE live_links
+ADD COLUMN class_date DATE,
+ADD COLUMN class_time TIME;

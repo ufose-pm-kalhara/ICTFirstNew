@@ -15,19 +15,19 @@ export async function GET() {
     const { payload } = await jwtVerify(token, secret);
     const studentGrade = payload.grade;
 
-    // 1. Try fetching for the specific grade
+    // 1. Try fetching for the specific grade - Added class_date and class_time to SELECT
     let [rows] = await pool.query<RowDataPacket[]>(
-      `SELECT id, title, url, announcement, lesson_id 
+      `SELECT id, title, url, announcement, lesson_id, class_date, class_time 
        FROM live_links 
        WHERE grade = ? 
        ORDER BY id DESC LIMIT 1`,
       [studentGrade]
     );
 
-    // 2. FALLBACK: If no link for that grade, get the latest link regardless of grade
+    // 2. FALLBACK: If no link for that grade, get the latest link - Added class_date and class_time here too
     if (rows.length === 0) {
       const [allRows] = await pool.query<RowDataPacket[]>(
-        `SELECT id, title, url, announcement, lesson_id 
+        `SELECT id, title, url, announcement, lesson_id, class_date, class_time 
          FROM live_links 
          ORDER BY id DESC LIMIT 1`
       );
