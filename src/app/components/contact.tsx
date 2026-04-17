@@ -5,7 +5,11 @@ interface ContactProps {
   onNavigate: (view: 'home' | 'faq' | 'privacy' | 'terms') => void;
 }
 
-export default function Contact({ onNavigate }: ContactProps) {
+export default function Contact({ 
+  onNavigate 
+}: { 
+  onNavigate: (view: 'home' | 'faq' | 'privacy' | 'terms') => void; 
+}) {
   return (
     <footer className="w-full py-16 bg-white border-t border-slate-100 px-6">
       <div className="max-w-7xl mx-auto">

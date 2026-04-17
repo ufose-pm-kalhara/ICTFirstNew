@@ -161,10 +161,7 @@ export default function LoginPage() {
           <div className="text-[#2B6390] font-black text-lg mb-1">ICTFIRST.lk</div>
           <p>© 2024 Admin Portal • Mrs. Kalugampitiya</p>
         </div>
-        <div className="flex gap-8">
-          <Link href="/contact" className="hover:text-slate-900 transition-colors">Support</Link>
-          <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
-        </div>
+        
       </footer>
     </div>
   );
