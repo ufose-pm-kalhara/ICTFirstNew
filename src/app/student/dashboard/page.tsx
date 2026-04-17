@@ -15,16 +15,18 @@ interface Lesson {
   video_url: string | null;
   material_id: number | null;
   notes: string | null;
-  created_at: string; // Added for month extraction
-  type?: string;      // Added for lesson category (Theory/Revision/etc)
+  created_at: string;
+  type?: string; 
 }
 
 interface LiveSession {
   id: number;
   title: string;
-  url: string | null; // Changed to nullable to handle "no link yet"
+  url: string | null;
   announcement: string;
   lesson_id: number;
+  class_date?: string; // Added for date display
+  class_time?: string; // Added for time display
 }
 
 interface PaymentRecord {
@@ -132,7 +134,6 @@ export default function StudentDashboard() {
     const lessonHasAccess = status === 'approved';
     const lessonIsPending = status === 'pending';
 
-    // Extract Month
     const lessonMonth = lesson.created_at 
       ? new Date(lesson.created_at).toLocaleString('default', { month: 'long' }) 
       : 'Session';
@@ -180,13 +181,25 @@ export default function StudentDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-8 py-12 select-none relative">
-      {/* ... (Keep Modal and Welcome Hero same as before) */}
       
       {/* Live Class Banner */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
         <div className="lg:col-span-2 bg-[#1A5683] rounded-[2.5rem] p-10 text-white flex flex-col justify-between shadow-xl shadow-blue-100/50 min-h-[320px]">
           <div>
-            <span className="bg-white/10 border border-white/20 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest italic">🔴 Live Session</span>
+            <div className="flex justify-between items-start">
+                <span className="bg-white/10 border border-white/20 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest italic">🔴 Live Session</span>
+                
+                {/* DATE AND TIME ADDED HERE */}
+                {liveSession?.class_date && (
+                    <div className="text-right">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-blue-200 italic mb-1">Scheduled For</p>
+                        <p className="text-sm font-black italic uppercase tracking-tighter">
+                            {liveSession.class_date} @ {liveSession.class_time}
+                        </p>
+                    </div>
+                )}
+            </div>
+
             <h2 className="text-4xl font-black mt-6 italic uppercase tracking-tighter leading-none">
                 {liveSession?.title || 'Next Session Upcoming'}
             </h2>
