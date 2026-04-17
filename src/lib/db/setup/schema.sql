@@ -186,3 +186,5 @@ ADD COLUMN status VARCHAR(20) DEFAULT 'Pending';
 ALTER TABLE live_links
 ADD COLUMN class_date DATE,
 ADD COLUMN class_time TIME;
+
+ALTER TABLE live_links MODIFY class_date VARCHAR(10);

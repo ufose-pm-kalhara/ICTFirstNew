@@ -48,15 +48,37 @@ export default function StudentDashboard() {
 
   const brandGradient = 'linear-gradient(135deg, #2B6390 0%, #1A5783 100%)';
 
+  /**
+   * ✅ CLEAN STRING-BASED FORMATTER
+   * Since DB is VARCHAR, dateStr is exactly "YYYY-MM-DD".
+   * We split the string and map the month manually.
+   */
   const formatDisplayDate = (dateStr?: string) => {
     if (!dateStr) return '';
-    const [year, month, day] = dateStr.split(/[-/]/);
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    return date.toLocaleDateString('en-GB', { 
-      day: 'numeric', 
-      month: 'short', 
-      year: 'numeric' 
-    });
+    
+    try {
+      // 1. Get just the date part (ignores any T00:00:00.000Z if present)
+      const cleanDate = dateStr.split('T')[0];
+      
+      // 2. Split by hyphen (assumes YYYY-MM-DD format from DB)
+      const parts = cleanDate.split('-'); 
+      if (parts.length < 3) return dateStr;
+
+      const year = parts[0];
+      const monthIndex = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      
+      // 3. Return formatted string: "25 Oct 2024"
+      return `${day} ${months[monthIndex]} ${year}`;
+    } catch (e) {
+      console.error("Date formatting error:", e);
+      return dateStr; 
+    }
   };
 
   const formatDisplayTime = (timeStr?: string) => {
