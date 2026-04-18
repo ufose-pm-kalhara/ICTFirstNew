@@ -86,7 +86,7 @@ export default function Hero() {
 
       {/* BACKGROUND SETUP: Fixed image with a white gradient overlay */}
       <div className="fixed inset-0 z-0 h-screen w-screen pointer-events-none">
-        <Image src="/image.png" alt="BG" fill className="object-cover opacity-[0.18] grayscale contrast-125" priority />
+        <Image src="/image.jpeg" alt="BG" fill className="object-cover opacity-[0.18] grayscale contrast-125" priority />
         <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/70 to-white"></div>
       </div>
 
