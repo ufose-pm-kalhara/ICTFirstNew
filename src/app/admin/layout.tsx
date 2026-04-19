@@ -91,10 +91,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Bottom Actions */}
         <div className="mt-auto p-6 space-y-2">
-          <button className="w-full flex items-center gap-4 px-6 py-3 text-[#64748B] text-[15px] font-semibold hover:text-slate-900 transition-colors">
+          <Link 
+            href="mailto:ufosesoftwareceo@gmail.com"
+            className="w-full flex items-center gap-4 px-6 py-3 text-[#64748B] text-[15px] font-semibold hover:text-slate-900 transition-colors"
+          >
             <HelpCircle size={20} />
             Support
-          </button>
+          </Link>
           <button 
             onClick={handleLogout}
             className="w-full flex items-center gap-4 px-6 py-3 text-[#EF4444] text-[15px] font-semibold hover:bg-red-50 rounded-2xl transition-all"
