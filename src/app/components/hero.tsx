@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 // ==========================================
 // UI HELPER COMPONENTS
@@ -11,7 +12,7 @@ import Image from 'next/image';
  * Animated counter for statistics
  * Increases number from 0 to the target value over a set duration
  */
-const CountUp = ({ end, duration = 3000 }: { end: number; duration?: number }) => {
+function CountUp({ end, duration = 3000 }: { end: number; duration?: number; }) {
   const [count, setCount] = useState(0);
   useEffect(() => {
     let startTime: number | null = null;
@@ -25,7 +26,7 @@ const CountUp = ({ end, duration = 3000 }: { end: number; duration?: number }) =
     requestAnimationFrame(animate);
   }, [end, duration]);
   return <span>{count.toLocaleString()}</span>;
-};
+}
 
 /**
  * Individual card layout for the yearly exam results
@@ -114,9 +115,11 @@ export default function Hero() {
               Join the evolution of ICT education. We turn complex concepts into distinctions through structured theory and practicals.
             </p>
             
+            <Link href="/register" passHref>
             <button className="bg-[#1A5683] text-white px-12 py-5 rounded-2xl font-bold text-lg hover:bg-red-600 transition-all shadow-2xl active:scale-95 opacity-0 animate-text-reveal [animation-delay:0.9s]">
               Register Now 🚀
             </button>
+            </Link>
           </div>
 
           {/* Hero Visuals: Teacher's portrait and floating award badge */}
