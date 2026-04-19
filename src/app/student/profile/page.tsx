@@ -55,6 +55,13 @@ export default function StudentProfile() {
 
   const handleUpdateProfile = async () => {
     if (!student) return;
+
+    // VALIDATION: Ensure phone number is exactly 10 digits before submitting
+    if (student.phone.length !== 10) {
+      alert("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
     const res = await fetch('/api/student/profile', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -110,7 +117,6 @@ export default function StudentProfile() {
                 alt="Profile" 
                 className="w-full h-full object-cover" 
               />
-              
             </div>
           </div>
           <h1 className="text-4xl font-black text-slate-800 mt-8 tracking-tighter uppercase italic leading-none text-center">{student.full_name}</h1>
@@ -123,12 +129,8 @@ export default function StudentProfile() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          
-          {/* LEFT COLUMN: Identity & Connectivity - MERGED FOR MOBILE */}
           <div className="bg-white lg:bg-transparent rounded-[2.5rem] lg:rounded-none shadow-sm lg:shadow-none border border-slate-100 lg:border-none overflow-hidden">
             <div className="space-y-0 lg:space-y-10">
-              
-              {/* Identity Details */}
               <section className="bg-white lg:rounded-[2.5rem] p-10 lg:shadow-sm lg:border border-slate-100">
                 <h3 className="font-black text-slate-800 mb-10 flex items-center gap-3 uppercase text-[13px] tracking-wider italic">
                   <span className="w-8 h-8 bg-[#F0F5FA] text-[#1A5783] rounded-xl flex items-center justify-center not-italic">🪪</span> Identity Details
@@ -160,10 +162,8 @@ export default function StudentProfile() {
                 </div>
               </section>
 
-              {/* Divider for Mobile (Horizontal line between merged sections) */}
               <div className="mx-10 border-t border-slate-100 lg:hidden"></div>
 
-              {/* Contact Information */}
               <section className="bg-white lg:rounded-[2.5rem] p-10 lg:shadow-sm lg:border border-slate-100">
                 <h3 className="font-black text-slate-800 mb-10 flex items-center gap-3 uppercase text-[13px] tracking-wider italic">
                   <span className="w-8 h-8 bg-[#F0F5FA] text-[#1A5783] rounded-xl flex items-center justify-center not-italic">@</span> Contact Information
@@ -182,27 +182,31 @@ export default function StudentProfile() {
                       <input 
                         type="text" 
                         value={student.phone}
-                        onChange={(e) => setStudent({...student, phone: e.target.value})}
+                        // RESTRICTION LOGIC: Only allow digits and max length of 10
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, ''); // Remove non-numeric characters
+                          if (val.length <= 10) {
+                            setStudent({...student, phone: val});
+                          }
+                        }}
+                        placeholder="07XXXXXXXX"
                         className="w-full p-4.5 pl-12 bg-slate-50 rounded-2xl outline-none focus:ring-4 focus:ring-[#1A5783]/5 font-bold text-slate-700 transition-all"
                       />
                       <span className="absolute left-4 top-1/2 -translate-y-1/2">📞</span>
                     </div>
                   </div>
                 </div>
-                {/* Save/Discard Buttons injected here for Mobile Only */}
                 <ActionButtons isMobile={true} onUpdateProfile={handleUpdateProfile} />
               </section>
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Security & Access */}
           <div>
             <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 h-full">
               <h3 className="font-black text-slate-800 mb-10 flex items-center gap-3 uppercase text-[13px] tracking-wider italic">
                 <span className="w-8 h-8 bg-[#F0F5FA] text-[#1A5783] rounded-xl flex items-center justify-center not-italic">🛡️</span> Security & Credentials
               </h3>
               <div className="space-y-7">
-                
                 <div className="relative">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Current Password</label>
                   <input 
@@ -212,14 +216,11 @@ export default function StudentProfile() {
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     className="w-full p-4.5 pr-14 bg-slate-50 rounded-2xl outline-none focus:ring-4 focus:ring-[#1A5783]/5 font-bold text-slate-700 transition-all border border-transparent focus:border-[#1A5783]/10"
                   />
-                  <button 
-                    onClick={() => setShowCurrent(!showCurrent)}
-                    className="absolute right-5 top-[46px] text-slate-300 hover:text-[#1A5783] transition-colors"
-                  >
+                  <button onClick={() => setShowCurrent(!showCurrent)} className="absolute right-5 top-[46px] text-slate-300 hover:text-[#1A5783] transition-colors">
                     {showCurrent ? '🔒' : '👁️'}
                   </button>
                 </div>
-
+                {/* ... (Other password fields remain exactly the same) */}
                 <div className="relative">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">New Password</label>
                   <input 
@@ -229,14 +230,10 @@ export default function StudentProfile() {
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="w-full p-4.5 pr-14 bg-slate-50 rounded-2xl outline-none focus:ring-4 focus:ring-[#1A5783]/5 font-bold text-slate-700 transition-all border border-transparent focus:border-[#1A5783]/10"
                   />
-                  <button 
-                    onClick={() => setShowNew(!showNew)}
-                    className="absolute right-5 top-[46px] text-slate-300 hover:text-[#1A5783] transition-colors"
-                  >
+                  <button onClick={() => setShowNew(!showNew)} className="absolute right-5 top-[46px] text-slate-300 hover:text-[#1A5783] transition-colors">
                     {showNew ? '🔒' : '👁️'}
                   </button>
                 </div>
-
                 <div className="relative">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Verify New Password</label>
                   <input 
@@ -246,14 +243,10 @@ export default function StudentProfile() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full p-4.5 pr-14 bg-slate-50 rounded-2xl outline-none focus:ring-4 focus:ring-[#1A5783]/5 font-bold text-slate-700 transition-all border border-transparent focus:border-[#1A5783]/10"
                   />
-                  <button 
-                    onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-5 top-[46px] text-slate-300 hover:text-[#1A5783] transition-colors"
-                  >
+                  <button onClick={() => setShowConfirm(!showConfirm)} className="absolute right-5 top-[46px] text-slate-300 hover:text-[#1A5783] transition-colors">
                     {showConfirm ? '🔒' : '👁️'}
                   </button>
                 </div>
-
                 <button 
                   onClick={handleUpdatePassword}
                   disabled={passLoading}
@@ -261,21 +254,11 @@ export default function StudentProfile() {
                 >
                   {passLoading ? 'Syncing...' : 'Update Password'} <span>🔄</span>
                 </button>
-
-                <div className="mt-10 p-7 bg-[#F0F5FA] rounded-[2rem] border border-blue-50 flex gap-4">
-                  <span className="text-xl">💡</span>
-                  <p className="text-[12px] font-bold text-[#1A5683] leading-relaxed">
-                    Protect your account by using a strong password. We recommend a mix of numbers, symbols, and uppercase letters.
-                  </p>
-                </div>
               </div>
             </section>
           </div>
         </div>
-
-        {/* Action Buttons for Desktop Only */}
         <ActionButtons isMobile={false} onUpdateProfile={handleUpdateProfile} />
-
       </main>
     </div>
   );
