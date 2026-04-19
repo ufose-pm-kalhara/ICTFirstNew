@@ -156,12 +156,25 @@ export default function LoginPage() {
       </main>
 
       {/* Footer synchronized with Admin Header/Footer style */}
-      <footer className="max-w-7xl mx-auto w-full px-10 py-10 flex flex-col md:row justify-between items-center text-[13px] text-slate-400 font-semibold border-t border-slate-100 md:flex-row">
+      <footer className="max-w-7xl mx-auto w-full px-10 py-10 flex flex-col md:flex-row justify-between items-center text-[13px] text-slate-400 font-semibold border-t border-slate-100">
         <div className="text-center md:text-left mb-6 md:mb-0">
           <div className="text-[#2B6390] font-black text-lg mb-1">ICTFIRST.lk</div>
           <p>© 2024 Admin Portal • Mrs. Kalugampitiya</p>
         </div>
-        
+
+        {/* Support Button Added Here */}
+        <a 
+          href="https://wa.me/94776174776" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="bg-white border border-slate-200 px-6 py-3 rounded-xl flex items-center gap-2 text-slate-600 hover:bg-slate-50 transition-all hover:border-slate-300 shadow-sm"
+        >
+          <span className="text-green-500 text-lg">💬</span>
+          <div className="text-left">
+            <p className="text-[10px] uppercase tracking-widest font-black opacity-50 leading-none mb-1">Need Help?</p>
+            <p className="text-[13px] font-bold text-slate-900">Support Chat</p>
+          </div>
+        </a>
       </footer>
     </div>
   );
