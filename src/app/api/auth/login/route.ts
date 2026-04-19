@@ -17,11 +17,20 @@ export async function POST(req: Request) {
 
     const { studentId, password } = validation.data;
 
-    // 2. Find user by Student ID (Using the new service method)
+    // 2. Find user by Student ID
     const user = await StudentService.findByStudentId(studentId);
     
     if (!user) {
       return NextResponse.json({ success: false, message: 'Invalid credentials' }, { status: 401 });
+    }
+
+    // 2.5 Check if account is Suspended
+    // This blocks access before even checking the password
+    if (user.status === 'Suspended') {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Your account has been suspended. Please contact support.' 
+      }, { status: 403 });
     }
 
     // 3. Check Password Match
@@ -52,18 +61,16 @@ export async function POST(req: Request) {
       maxAge: 60 * 60 * 24,
     });
 
-    // Inside src/app/api/auth/login/route.ts
-
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Login successful',
-        role: user.role, // 👈 ADD THIS LINE (Level 1)
-        user: { 
-          fullName: user.full_name, 
-          studentId: user.student_id,
-          role: user.role // (Level 2)
-        } 
-      });
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Login successful',
+      role: user.role,
+      user: { 
+        fullName: user.full_name, 
+        studentId: user.student_id,
+        role: user.role
+      } 
+    });
 
   } catch (error: unknown) {
     console.error('Login Error:', error);

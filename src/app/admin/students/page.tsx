@@ -65,7 +65,8 @@ export default function StudentDirectory() {
     }));
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+    const worksheetName = "Students";
+    XLSX.utils.book_append_sheet(workbook, worksheet, worksheetName);
     XLSX.writeFile(workbook, `Student_List_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
@@ -73,10 +74,10 @@ export default function StudentDirectory() {
     e.preventDefault();
     if (!selectedStudent) return;
 
-    const updatedStatus = (selectedStudent.student_id && selectedStudent.student_id.trim() !== '') 
-      ? 'Active' 
-      : selectedStudent.status;
-
+    // FIX: Respect the manually selected status from the dropdown
+    // Only auto-switch to 'Active' if it was previously 'Pending' and an ID is now provided
+    const finalStatus = selectedStudent.status;
+    
     try {
       const res = await fetch('/api/admin/students/update', {
         method: 'PATCH',
@@ -84,7 +85,7 @@ export default function StudentDirectory() {
         body: JSON.stringify({
           id: selectedStudent.id,
           student_id: selectedStudent.student_id,
-          status: updatedStatus
+          status: finalStatus // Sends the state directly from the dropdown
         }),
       });
       const data = await res.json();
@@ -235,7 +236,8 @@ export default function StudentDirectory() {
                   <div className="flex items-center gap-2">
                     <div className={`w-1.5 h-1.5 rounded-full ${
                       student.status === 'Active' ? 'bg-green-500' : 
-                      student.status === 'Pending' ? 'bg-amber-500' : 'bg-slate-300'
+                      student.status === 'Pending' ? 'bg-amber-500' : 
+                      student.status === 'Suspended' ? 'bg-red-500' : 'bg-slate-300'
                     }`} />
                     <span className="text-[12px] font-bold text-slate-600">{student.status}</span>
                   </div>
@@ -260,7 +262,7 @@ export default function StudentDirectory() {
         </table>
       </div>
 
-      {/* Modals are updated to use clean rounded-3xl and Slate styling */}
+      {/* View Modal */}
       {isViewOpen && selectedStudent && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl border border-slate-100">
@@ -299,11 +301,15 @@ export default function StudentDirectory() {
                 <select 
                   className="w-full mt-2 p-3 bg-slate-50 border border-slate-100 rounded-xl font-semibold outline-none" 
                   value={selectedStudent.status} 
-                  onChange={(e) => setSelectedStudent({...selectedStudent, status: e.target.value as Student['status']})}
+                  onChange={(e) => {
+                    const newStatus = e.target.value as Student['status'];
+                    setSelectedStudent({...selectedStudent, status: newStatus});
+                  }}
                 >
                   <option value="Active">Active</option>
                   <option value="Pending">Pending</option>
                   <option value="Suspended">Suspended</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
             </div>
