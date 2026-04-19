@@ -8,24 +8,23 @@ interface Payment {
   id: number;
   amount: number;
   status: 'pending' | 'approved' | 'rejected';
-  lesson_id?: string; // ✅ Track which lesson this is for
+  lesson_id?: string; 
   created_at: string;
 }
 
 function PaymentsContent() {
   const router = useRouter();
-  const searchParams = useSearchParams(); // ✅ Get lessonId from URL
+  const searchParams = useSearchParams(); 
   
   const [payments, setPayments] = useState<Payment[]>([]);
   const [amount, setAmount] = useState<string>('');
   const [billingMonth, setBillingMonth] = useState<string>('');
-  const [lessonId, setLessonId] = useState<string | null>(null); // ✅ New State
+  const [lessonId, setLessonId] = useState<string | null>(null); 
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
 
-  // ✅ Auto-select current month and detect Lesson ID from URL
   useEffect(() => {
     const months = [
       "January", "February", "March", "April", "May", "June",
@@ -33,7 +32,6 @@ function PaymentsContent() {
     ];
     setBillingMonth(months[new Date().getMonth()]);
 
-    // If you link to this page like /payments?lessonId=math-101
     const id = searchParams.get('lessonId');
     if (id) setLessonId(id);
   }, [searchParams]);
@@ -83,7 +81,7 @@ function PaymentsContent() {
           amount: parseFloat(amount), 
           proof_url: image, 
           billing_month: billingMonth,
-          lesson_id: lessonId // ✅ Now sending the specific lesson ID
+          lesson_id: lessonId 
         }),
       });
 
@@ -114,7 +112,6 @@ function PaymentsContent() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start relative">
       
-      {/* Success Popup Message */}
       {showSuccess && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-in zoom-in duration-300">
@@ -145,7 +142,6 @@ function PaymentsContent() {
       </div>
 
       <div className=" lg:col-span-7 space-y-8 ">
-
         <div className="bg-white p-10 rounded-xl shadow-sm ">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#8FC3F6] text-[#003D63] font-semibold text-sm">1</div>  
@@ -154,7 +150,6 @@ function PaymentsContent() {
             </h2>
           </div>
 
-          {/* ✅ Hidden Lesson Identifier */}
           {lessonId && (
             <div className="mb-4 px-4 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs font-bold text-[#2B6390] uppercase tracking-wider">
               Paying for Lesson ID: {lessonId}
@@ -194,7 +189,7 @@ function PaymentsContent() {
               placeholder="Enter amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full h-10 mt-2 p-3 text-sm text-gray-800 bg-[#DEE3E6] rounded-xl outline-none focus:ring-1 focus:ring-blue-200"
+              className="w-full h-10 mt-2 p-3 text-sm text-gray-800 bg-[#DEE3E6] rounded-xl outline-none focus:ring-1 focus:ring-blue-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
         </div>
@@ -360,8 +355,13 @@ function PaymentsContent() {
             </div>
           </div>
         </div>
-
-        <button className="group w-full flex items-center justify-between p-5 bg-[#F8F9FA] border border-gray-200 rounded-[22px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:bg-gray-50 transition-all duration-300">
+        {/* WhatsApp Support Link */}
+        <a 
+          href="https://wa.me/9412345697" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="group w-full flex items-center justify-between p-5 bg-[#F8F9FA] border border-gray-200 rounded-[22px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:bg-gray-50 transition-all duration-300"
+        >
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-[#DCEAF8] flex-shrink-0">
               <svg 
@@ -382,7 +382,7 @@ function PaymentsContent() {
                 Having trouble?
               </h4>
               <p className="text-sm text-gray-500 mt-0.5 font-medium">
-                Chat with our support team
+                Text to this number via WhatsApp
               </p>
             </div>
           </div>
@@ -397,13 +397,12 @@ function PaymentsContent() {
             <line x1="5" y1="12" x2="19" y2="12" />
             <polyline points="12 5 19 12 12 19" />
           </svg>
-        </button>
+        </a>
       </div>
     </div>
   );
 }
 
-// ✅ Main Export with Suspense
 export default function PaymentsPage() {
   return (
     <Suspense fallback={<div className="p-20 text-center font-black text-[#1A5683] animate-pulse uppercase tracking-widest">Loading...</div>}>
