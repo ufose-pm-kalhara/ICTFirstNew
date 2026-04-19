@@ -84,7 +84,17 @@ export default function ContentManagement() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files).map(f => ({ file: f, label: f.name }));
+      const filesArray = Array.from(e.target.files);
+      const maxSize = 3 * 1024 * 1024; // 3MB in bytes
+      
+      // Filter out files larger than 3MB
+      const validFiles = filesArray.filter(f => f.size <= maxSize);
+      
+      if (validFiles.length < filesArray.length) {
+        alert("Some files were rejected because they exceed the 3MB size limit.");
+      }
+
+      const newFiles = validFiles.map(f => ({ file: f, label: f.name }));
       setForm({ ...form, files: [...form.files, ...newFiles] });
     }
   };
@@ -141,12 +151,20 @@ export default function ContentManagement() {
       formData.append(`label_${i}`, f.label);
     });
 
-    const method = editingId ? 'PUT' : 'POST';
-    const res = await fetch('/api/admin/content', { method, body: formData });
-    if (res.ok) {
-      setIsFormOpen(false);
-      fetchLessons();
-      alert(editingId ? "Lesson Updated!" : "Lesson Published!");
+    try {
+      const method = editingId ? 'PUT' : 'POST';
+      const res = await fetch('/api/admin/content', { method, body: formData });
+      
+      if (res.ok) {
+        setIsFormOpen(false);
+        fetchLessons();
+        alert(editingId ? "Changes saved successfully!" : "New lesson and materials added successfully to the database!");
+      } else {
+        const errorData = await res.json();
+        alert(`Error: ${errorData.message || "Failed to save content."}`);
+      }
+    } catch (err) {
+      alert("A network error occurred. Please check the file sizes and try again.");
     }
   };
 
@@ -267,7 +285,7 @@ export default function ContentManagement() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <label className="text-[11px] font-bold uppercase text-blue-600 tracking-wider flex items-center gap-2">
-                    <FileText size={14} /> Learning Materials
+                    <FileText size={14} /> Learning Materials (Max 3MB per PDF)
                   </label>
                   <label className="text-[11px] font-bold text-slate-400 cursor-pointer hover:text-blue-600 transition-colors uppercase tracking-widest flex items-center gap-1">
                     <UploadCloud size={14} /> Upload PDF
