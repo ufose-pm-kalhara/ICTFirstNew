@@ -48,35 +48,18 @@ export default function StudentDashboard() {
 
   const brandGradient = 'linear-gradient(135deg, #2B6390 0%, #1A5783 100%)';
 
-  /**
-   * ✅ CLEAN STRING-BASED FORMATTER
-   * Since DB is VARCHAR, dateStr is exactly "YYYY-MM-DD".
-   * We split the string and map the month manually.
-   */
   const formatDisplayDate = (dateStr?: string) => {
     if (!dateStr) return '';
-    
     try {
-      // 1. Get just the date part (ignores any T00:00:00.000Z if present)
       const cleanDate = dateStr.split('T')[0];
-      
-      // 2. Split by hyphen (assumes YYYY-MM-DD format from DB)
       const parts = cleanDate.split('-'); 
       if (parts.length < 3) return dateStr;
-
       const year = parts[0];
       const monthIndex = parseInt(parts[1], 10) - 1;
       const day = parseInt(parts[2], 10);
-
-      const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-      ];
-      
-      // 3. Return formatted string: "25 Oct 2024"
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       return `${day} ${months[monthIndex]} ${year}`;
     } catch (e) {
-      console.error("Date formatting error:", e);
       return dateStr; 
     }
   };
@@ -124,7 +107,7 @@ export default function StudentDashboard() {
         }
 
         if (lessonsData.success) {
-          setLessons(lessonsData.lessons.slice(0, 12)); 
+          setLessons(lessonsData.lessons); 
         }
 
         if (liveData.success) {
@@ -195,7 +178,7 @@ export default function StudentDashboard() {
           {lesson.class_date && (
             <div className="mb-4 flex items-center gap-2 text-slate-500">
                <span className="text-[10px] md:text-[11px] font-bold bg-slate-50 px-2 py-1 rounded border border-slate-100 uppercase tracking-tighter inline-block">
-                🗓️ {formatDisplayDate(lesson.class_date)} {lesson.class_time && `@ ${formatDisplayTime(lesson.class_time)}`}
+                 🗓️ {formatDisplayDate(lesson.class_date)} {lesson.class_time && `@ ${formatDisplayTime(lesson.class_time)}`}
                </span>
             </div>
           )}
@@ -300,14 +283,23 @@ export default function StudentDashboard() {
         </div>
       </div>
 
+      {/* RECENTLY UNLOCKED SECTION - Limited to 4 cards */}
       {unlockedLessons.length > 0 && (
         <div className="mb-12 md:mb-16">
-          <div className="flex items-center gap-3 mb-6 md:mb-8">
-            <div className="h-5 md:h-6 w-1 rounded-full bg-green-500"></div>
-            <h2 className="text-[12px] md:text-[14px] font-bold uppercase tracking-[0.2em] text-slate-800">My Active Courses</h2>
+          <div className="flex items-center justify-between mb-6 md:mb-8">
+            <div className="flex items-center gap-3">
+              <div className="h-5 md:h-6 w-1 rounded-full bg-green-500"></div>
+              <h2 className="text-[12px] md:text-[14px] font-bold uppercase tracking-[0.2em] text-slate-800">Recently Unlocked</h2>
+            </div>
+            <Link 
+              href="/student/lessons" 
+              className="text-[11px] md:text-[12px] font-black text-[#1A5783] uppercase tracking-widest hover:translate-x-1 transition-transform flex items-center gap-2"
+            >
+              View All Lessons <span>→</span>
+            </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            {unlockedLessons.map((lesson) => <LessonCard key={lesson.id} lesson={lesson} />)}
+            {unlockedLessons.slice(0, 4).map((lesson) => <LessonCard key={lesson.id} lesson={lesson} />)}
           </div>
         </div>
       )}
@@ -315,7 +307,7 @@ export default function StudentDashboard() {
       <div className="mb-10 md:mb-12">
         <div className="flex items-center gap-3 mb-6 md:mb-8">
           <div className="h-5 md:h-6 w-1 rounded-full bg-slate-300"></div>
-          <h2 className="text-[12px] md:text-[14px] font-bold uppercase tracking-[0.2em] text-slate-500">Upcoming Materials</h2>
+          <h2 className="text-[12px] md:text-[14px] font-bold uppercase tracking-[0.2em] text-slate-500">Locked Materials</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {lockedLessons.length > 0 ? (
