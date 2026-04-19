@@ -12,17 +12,33 @@ interface Student {
   profile_image: string | null;
 }
 
+// Reusable Action Buttons to avoid code duplication
+const ActionButtons = ({ isMobile = false, onUpdateProfile }: { isMobile?: boolean; onUpdateProfile: () => void }) => (
+  <div className={`flex flex-col sm:flex-row justify-center items-center gap-5 ${isMobile ? 'mt-10 lg:hidden' : 'mt-16 hidden lg:flex'}`}>
+    <button 
+      onClick={() => window.location.reload()} 
+      className="w-full sm:w-auto px-12 py-4.5 bg-white text-slate-400 border border-slate-200 rounded-2xl font-bold text-[13px] uppercase tracking-widest hover:bg-slate-50 transition-all"
+    >
+      Discard Changes
+    </button>
+    <button 
+      onClick={onUpdateProfile} 
+      className="w-full sm:w-auto px-16 py-4.5 bg-[#1A5783] text-white rounded-2xl font-bold text-[13px] uppercase tracking-widest shadow-2xl shadow-blue-900/20 hover:scale-105 transition-all active:scale-95"
+    >
+      Save Account Profile
+    </button>
+  </div>
+);
+
 export default function StudentProfile() {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Password States
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passLoading, setPassLoading] = useState(false);
 
-  // Toggle Visibility States
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -94,15 +110,10 @@ export default function StudentProfile() {
                 alt="Profile" 
                 className="w-full h-full object-cover" 
               />
-              <button className="absolute bottom-1 right-1 bg-[#1A5783] p-2.5 rounded-full border-4 border-white text-white shadow-lg hover:scale-110 transition-transform">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-              </button>
+              
             </div>
           </div>
-          <h1 className="text-4xl font-black text-slate-800 mt-8 tracking-tighter uppercase italic leading-none">{student.full_name}</h1>
-          
+          <h1 className="text-4xl font-black text-slate-800 mt-8 tracking-tighter uppercase italic leading-none text-center">{student.full_name}</h1>
           <div className="mt-5 flex flex-col items-center gap-3">
             <span className="bg-[#1A5783] text-white text-[11px] font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-xl shadow-blue-900/10">
               Student ID: {student.student_id}
@@ -113,65 +124,75 @@ export default function StudentProfile() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           
-          {/* LEFT COLUMN: Identity & Connectivity */}
-          <div className="space-y-10">
-            <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
-              <h3 className="font-black text-slate-800 mb-10 flex items-center gap-3 uppercase text-[13px] tracking-wider italic">
-                <span className="w-8 h-8 bg-[#F0F5FA] text-[#1A5783] rounded-xl flex items-center justify-center not-italic">🪪</span> Identity Details
-              </h3>
-              <div className="space-y-7">
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Full Legal Name</label>
-                  <input 
-                    type="text" 
-                    value={student.full_name}
-                    onChange={(e) => setStudent({...student, full_name: e.target.value})}
-                    className="w-full p-4.5 bg-slate-50 rounded-2xl outline-none focus:ring-4 focus:ring-[#1A5783]/5 border border-transparent focus:border-[#1A5783]/10 font-bold text-slate-700 transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Academic Grade</label>
-                  <div className="relative">
-                    <select 
-                      value={student.grade}
-                      onChange={(e) => setStudent({...student, grade: parseInt(e.target.value)})}
-                      className="w-full p-4.5 bg-slate-50 rounded-2xl outline-none appearance-none font-bold text-slate-700 border border-transparent focus:border-[#1A5783]/10 cursor-pointer"
-                    >
-                      <option value={10}>Grade 10</option>
-                      <option value={11}>Grade 11</option>
-                    </select>
-                    <span className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
-              <h3 className="font-black text-slate-800 mb-10 flex items-center gap-3 uppercase text-[13px] tracking-wider italic">
-                <span className="w-8 h-8 bg-[#F0F5FA] text-[#1A5783] rounded-xl flex items-center justify-center not-italic">@</span> Contact Information
-              </h3>
-              <div className="space-y-7">
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Login Email (Read-only)</label>
-                  <div className="relative">
-                    <input type="text" value={student.email} disabled className="w-full p-4.5 pl-12 bg-slate-50 rounded-2xl font-bold text-slate-400 border border-slate-100 opacity-60 cursor-not-allowed" />
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2">✉️</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">WhatsApp Connectivity</label>
-                  <div className="relative">
+          {/* LEFT COLUMN: Identity & Connectivity - MERGED FOR MOBILE */}
+          <div className="bg-white lg:bg-transparent rounded-[2.5rem] lg:rounded-none shadow-sm lg:shadow-none border border-slate-100 lg:border-none overflow-hidden">
+            <div className="space-y-0 lg:space-y-10">
+              
+              {/* Identity Details */}
+              <section className="bg-white lg:rounded-[2.5rem] p-10 lg:shadow-sm lg:border border-slate-100">
+                <h3 className="font-black text-slate-800 mb-10 flex items-center gap-3 uppercase text-[13px] tracking-wider italic">
+                  <span className="w-8 h-8 bg-[#F0F5FA] text-[#1A5783] rounded-xl flex items-center justify-center not-italic">🪪</span> Identity Details
+                </h3>
+                <div className="space-y-7">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Full Legal Name</label>
                     <input 
                       type="text" 
-                      value={student.phone}
-                      onChange={(e) => setStudent({...student, phone: e.target.value})}
-                      className="w-full p-4.5 pl-12 bg-slate-50 rounded-2xl outline-none focus:ring-4 focus:ring-[#1A5783]/5 font-bold text-slate-700 transition-all"
+                      value={student.full_name}
+                      onChange={(e) => setStudent({...student, full_name: e.target.value})}
+                      className="w-full p-4.5 bg-slate-50 rounded-2xl outline-none focus:ring-4 focus:ring-[#1A5783]/5 border border-transparent focus:border-[#1A5783]/10 font-bold text-slate-700 transition-all"
                     />
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2">📞</span>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Academic Grade</label>
+                    <div className="relative">
+                      <select 
+                        value={student.grade}
+                        onChange={(e) => setStudent({...student, grade: parseInt(e.target.value)})}
+                        className="w-full p-4.5 bg-slate-50 rounded-2xl outline-none appearance-none font-bold text-slate-700 border border-transparent focus:border-[#1A5783]/10 cursor-pointer"
+                      >
+                        <option value={10}>Grade 10</option>
+                        <option value={11}>Grade 11</option>
+                      </select>
+                      <span className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
+
+              {/* Divider for Mobile (Horizontal line between merged sections) */}
+              <div className="mx-10 border-t border-slate-100 lg:hidden"></div>
+
+              {/* Contact Information */}
+              <section className="bg-white lg:rounded-[2.5rem] p-10 lg:shadow-sm lg:border border-slate-100">
+                <h3 className="font-black text-slate-800 mb-10 flex items-center gap-3 uppercase text-[13px] tracking-wider italic">
+                  <span className="w-8 h-8 bg-[#F0F5FA] text-[#1A5783] rounded-xl flex items-center justify-center not-italic">@</span> Contact Information
+                </h3>
+                <div className="space-y-7">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Login Email (Read-only)</label>
+                    <div className="relative">
+                      <input type="text" value={student.email} disabled className="w-full p-4.5 pl-12 bg-slate-50 rounded-2xl font-bold text-slate-400 border border-slate-100 opacity-60 cursor-not-allowed" />
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2">✉️</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">WhatsApp Connectivity</label>
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        value={student.phone}
+                        onChange={(e) => setStudent({...student, phone: e.target.value})}
+                        className="w-full p-4.5 pl-12 bg-slate-50 rounded-2xl outline-none focus:ring-4 focus:ring-[#1A5783]/5 font-bold text-slate-700 transition-all"
+                      />
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2">📞</span>
+                    </div>
+                  </div>
+                </div>
+                {/* Save/Discard Buttons injected here for Mobile Only */}
+                <ActionButtons isMobile={true} onUpdateProfile={handleUpdateProfile} />
+              </section>
+            </div>
           </div>
 
           {/* RIGHT COLUMN: Security & Access */}
@@ -252,20 +273,9 @@ export default function StudentProfile() {
           </div>
         </div>
 
-        <div className="mt-16 flex flex-col sm:flex-row justify-center items-center gap-5">
-          <button 
-            onClick={() => window.location.reload()} 
-            className="w-full sm:w-auto px-12 py-4.5 bg-white text-slate-400 border border-slate-200 rounded-2xl font-bold text-[13px] uppercase tracking-widest hover:bg-slate-50 transition-all"
-          >
-            Discard Changes
-          </button>
-          <button 
-            onClick={handleUpdateProfile} 
-            className="w-full sm:w-auto px-16 py-4.5 bg-[#1A5783] text-white rounded-2xl font-bold text-[13px] uppercase tracking-widest shadow-2xl shadow-blue-900/20 hover:scale-105 transition-all active:scale-95"
-          >
-            Save Account Profile
-          </button>
-        </div>
+        {/* Action Buttons for Desktop Only */}
+        <ActionButtons isMobile={false} onUpdateProfile={handleUpdateProfile} />
+
       </main>
     </div>
   );
