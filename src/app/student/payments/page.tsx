@@ -24,6 +24,7 @@ function PaymentsContent() {
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   useEffect(() => {
     const months = [
@@ -56,7 +57,18 @@ function PaymentsContent() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    setFileError(null);
+
     if (file) {
+      // Validate File Type
+      const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      if (!validTypes.includes(file.type)) {
+        setFileError("Only JPEG or PNG images are allowed. PDFs and Word documents are not accepted.");
+        setImage(null);
+        e.target.value = ""; // Reset input
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImage(reader.result as string);
@@ -68,7 +80,7 @@ function PaymentsContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !image || !billingMonth) {
-      alert("Please enter amount and upload a slip.");
+      alert("Please enter amount and upload a valid image slip.");
       return;
     }
 
@@ -185,11 +197,17 @@ function PaymentsContent() {
               Amount
             </label>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               placeholder="Enter amount"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full h-10 mt-2 p-3 text-sm text-gray-800 bg-[#DEE3E6] rounded-xl outline-none focus:ring-1 focus:ring-blue-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                  setAmount(val);
+                }
+              }}
+              className="w-full h-10 mt-2 p-3 text-sm text-gray-800 bg-[#DEE3E6] rounded-xl outline-none focus:ring-1 focus:ring-blue-200"
             />
           </div>
         </div>
@@ -202,10 +220,10 @@ function PaymentsContent() {
             </h2>
           </div>
 
-          <div className="border-2 border-dashed border-[#ADB3B54D] rounded-xl p-10 text-center cursor-pointer bg-[#F1F4F5] ">
+          <div className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${fileError ? 'border-red-400 bg-red-50' : 'border-[#ADB3B54D] bg-[#F1F4F5]'}`}>
             <input
               type="file"
-              accept="image/*"
+              accept="image/png, image/jpeg, image/jpg"
               onChange={handleImageChange}
               className="hidden"
               id="fileUpload"/>
@@ -218,7 +236,7 @@ function PaymentsContent() {
                     alt="Preview"
                     className="w-48 rounded-lg shadow"
                   />
-                  <p className="text-sm text-green-600 mt-2">
+                  <p className="text-sm text-green-600 mt-2 font-semibold">
                     Click to change image
                   </p>
                 </div>
@@ -226,7 +244,7 @@ function PaymentsContent() {
                 <>
                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
                   <svg 
-                    className="w-8 h-8 text-[#2B6390]" 
+                    className={`w-8 h-8 ${fileError ? 'text-red-500' : 'text-[#2B6390]'}`} 
                     fill="none" 
                     stroke="currentColor" 
                     strokeWidth="2" 
@@ -237,14 +255,20 @@ function PaymentsContent() {
                     <path d="M14 2v6h6M12 18v-6m-3 3 3-3 3 3" />
                   </svg>
                 </div>
-                <p className="text-gray-800 font-bold">
-                  Click to upload bank slip </p>
+                <p className={`font-bold ${fileError ? 'text-red-600' : 'text-gray-800'}`}>
+                  {fileError ? 'Invalid File Type' : 'Click to upload bank slip'}
+                </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  JPEG or PNG (Max 2MB) </p>
+                  JPEG or PNG only (Max 2MB) </p>
                </>
               )}
             </label>
           </div>
+          {fileError && (
+            <p className="mt-3 text-xs text-red-500 font-bold bg-red-50 p-2 rounded border border-red-100 italic text-center animate-shake">
+              {fileError}
+            </p>
+          )}
         </div>
 
         <button
