@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react'; // Added useCallback
 import { useRouter } from 'next/navigation';
 import { Plus, Calendar, Users, CreditCard, History, AlertCircle, ChevronRight, ArrowUpRight } from 'lucide-react';
 
@@ -36,28 +36,35 @@ export default function AdminDashboard() {
     month: 'long', day: 'numeric', year: 'numeric'
   });
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [studentRes, paymentRes] = await Promise.all([
-          fetch('/api/admin/students'),
-          fetch('/api/admin/payments')
-        ]);
-        const studentData = await studentRes.json();
-        const paymentData = await paymentRes.json();
+  // Wrapped in useCallback to allow re-triggering safely
+  const loadData = useCallback(async () => {
+    try {
+      const [studentRes, paymentRes] = await Promise.all([
+        fetch('/api/admin/students', { cache: 'no-store' }), // Prevent browser caching
+        fetch('/api/admin/payments', { cache: 'no-store' })
+      ]);
+      const studentData = await studentRes.json();
+      const paymentData = await paymentRes.json();
 
-        if (studentData.success) setStudents(studentData.students);
-        if (paymentData.success) setPayments(paymentData.payments);
-      } catch (err) {
-        console.error("Dashboard Load Error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
+      if (studentData.success) setStudents(studentData.students);
+      if (paymentData.success) setPayments(paymentData.payments);
+    } catch (err) {
+      console.error("Dashboard Load Error:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    loadData();
+    
+    // Optional: Refresh data when window gains focus (e.g., coming back from another tab/window)
+    window.addEventListener('focus', loadData);
+    return () => window.removeEventListener('focus', loadData);
+  }, [loadData]);
+
   const pendingApprovalCount = students.filter(s => s.status === 'Pending' || !s.student_id).length;
+  // Ensure we always filter live state
   const criticalPayments = payments.filter(p => p.status === 'pending').slice(0, 3);
   
   const thisMonthNewStudents = students.filter(s => {

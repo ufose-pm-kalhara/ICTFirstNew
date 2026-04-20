@@ -277,16 +277,7 @@ export default function AdminPayments() {
               </div>
 
               {/* Remarks */}
-              <div>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Verification Notes</h3>
-                <textarea 
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-300"
-                  placeholder="Reason for rejection or internal notes..."
-                  rows={4}
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                />
-              </div>
+              
             </div>
 
             <div className="p-6 border-t border-slate-100 grid grid-cols-2 gap-3 bg-slate-50/50">
