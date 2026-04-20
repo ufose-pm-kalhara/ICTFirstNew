@@ -10,7 +10,8 @@ import {
   Edit3, 
   MessageCircle, 
   UserPlus, 
-  ChevronRight 
+  ChevronRight,
+  ChevronLeft
 } from 'lucide-react';
 
 interface Student {
@@ -26,10 +27,14 @@ interface Student {
 
 export default function StudentDirectory() {
   const [students, setStudents] = useState<Student[]>([]);
-  const [activeTab, setActiveTab] = useState<'all' | 'pending'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'suspended'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterGrade, setFilterGrade] = useState('All');
   const [loading, setLoading] = useState(true);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
@@ -54,6 +59,11 @@ export default function StudentDirectory() {
     fetchStudents();
   }, [fetchStudents]);
 
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterGrade, activeTab]);
+
   const exportToExcel = () => {
     const dataToExport = filteredStudents.map(s => ({
       ID: s.student_id || 'N/A',
@@ -74,8 +84,6 @@ export default function StudentDirectory() {
     e.preventDefault();
     if (!selectedStudent) return;
 
-    // FIX: Respect the manually selected status from the dropdown
-    // Only auto-switch to 'Active' if it was previously 'Pending' and an ID is now provided
     const finalStatus = selectedStudent.status;
     
     try {
@@ -85,7 +93,7 @@ export default function StudentDirectory() {
         body: JSON.stringify({
           id: selectedStudent.id,
           student_id: selectedStudent.student_id,
-          status: finalStatus // Sends the state directly from the dropdown
+          status: finalStatus
         }),
       });
       const data = await res.json();
@@ -106,15 +114,28 @@ export default function StudentDirectory() {
   };
 
   const pendingCount = students.filter(s => s.status === 'Pending' || !s.student_id).length;
+  const suspendedCount = students.filter(s => s.status === 'Suspended').length;
 
   const filteredStudents = students.filter(s => {
     const isPending = s.status === 'Pending' || !s.student_id;
-    const matchesTab = activeTab === 'all' ? true : isPending;
+    const isSuspended = s.status === 'Suspended';
+    
+    const matchesTab = 
+      activeTab === 'all' ? true : 
+      activeTab === 'pending' ? isPending : 
+      isSuspended;
+
     const matchesSearch = s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           s.student_id?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesGrade = filterGrade === 'All' ? true : s.grade === parseInt(filterGrade);
     return matchesTab && matchesSearch && matchesGrade;
   });
+
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentStudents = filteredStudents.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
 
   return (
     <div className="font-sans text-slate-900">
@@ -136,13 +157,19 @@ export default function StudentDirectory() {
               onClick={() => setActiveTab('all')}
               className={`px-5 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'all' ? 'bg-[#F0F7FF] text-[#2563EB]' : 'text-slate-500 hover:text-slate-700'}`}
             >
-              All Students
+              All
             </button>
             <button 
               onClick={() => setActiveTab('pending')}
               className={`px-5 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'pending' ? 'bg-[#F0F7FF] text-[#2563EB]' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Pending ({pendingCount})
+            </button>
+            <button 
+              onClick={() => setActiveTab('suspended')}
+              className={`px-5 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'suspended' ? 'bg-red-50 text-red-600' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              Suspended ({suspendedCount})
             </button>
           </div>
           <button 
@@ -162,8 +189,8 @@ export default function StudentDirectory() {
             <UserPlus size={24} />
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase">Pending</p>
-            <h3 className="text-2xl font-bold text-slate-900">{pendingCount}</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase">Total Result</p>
+            <h3 className="text-2xl font-bold text-slate-900">{filteredStudents.length}</h3>
           </div>
         </div>
       </div>
@@ -209,57 +236,86 @@ export default function StudentDirectory() {
           <tbody className="divide-y divide-slate-50">
             {loading ? (
               <tr><td colSpan={5} className="py-20 text-center text-slate-400 font-medium text-sm">Loading records...</td></tr>
-            ) : filteredStudents.map((student) => (
-              <tr key={student.id} className="hover:bg-slate-50/30 transition-colors">
-                <td className="px-8 py-5">
-                  <span className={`font-bold text-sm ${student.student_id ? 'text-slate-900' : 'text-amber-500'}`}>
-                    {student.student_id || 'Pending ID'}
-                  </span>
-                </td>
-                <td className="px-8 py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-bold text-xs">
-                      {student.full_name.charAt(0)}
+            ) : currentStudents.length > 0 ? (
+              currentStudents.map((student) => (
+                <tr key={student.id} className="hover:bg-slate-50/30 transition-colors">
+                  <td className="px-8 py-5">
+                    <span className={`font-bold text-sm ${student.student_id ? 'text-slate-900' : 'text-amber-500'}`}>
+                      {student.student_id || 'Pending ID'}
+                    </span>
+                  </td>
+                  <td className="px-8 py-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-bold text-xs">
+                        {student.full_name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900 text-[14px] leading-tight">{student.full_name}</p>
+                        <p className="text-[12px] text-slate-400 font-medium">{student.email}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold text-slate-900 text-[14px] leading-tight">{student.full_name}</p>
-                      <p className="text-[12px] text-slate-400 font-medium">{student.email}</p>
+                  </td>
+                  <td className="px-8 py-5">
+                    <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-[11px] font-bold uppercase">
+                      Grade {student.grade}
+                    </span>
+                  </td>
+                  <td className="px-8 py-5">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full ${
+                        student.status === 'Active' ? 'bg-green-500' : 
+                        student.status === 'Pending' ? 'bg-amber-500' : 
+                        student.status === 'Suspended' ? 'bg-red-500' : 'bg-slate-300'
+                      }`} />
+                      <span className="text-[12px] font-bold text-slate-600">{student.status}</span>
                     </div>
-                  </div>
-                </td>
-                <td className="px-8 py-5">
-                  <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-[11px] font-bold uppercase">
-                    Grade {student.grade}
-                  </span>
-                </td>
-                <td className="px-8 py-5">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-1.5 h-1.5 rounded-full ${
-                      student.status === 'Active' ? 'bg-green-500' : 
-                      student.status === 'Pending' ? 'bg-amber-500' : 
-                      student.status === 'Suspended' ? 'bg-red-500' : 'bg-slate-300'
-                    }`} />
-                    <span className="text-[12px] font-bold text-slate-600">{student.status}</span>
-                  </div>
-                </td>
-                <td className="px-8 py-5 text-right space-x-1">
-                  <button 
-                    onClick={() => sendWhatsAppNotification(student)}
-                    className={`p-2 rounded-lg transition-all ${student.student_id ? 'text-green-500 hover:bg-green-50' : 'text-slate-200'}`}
-                  >
-                    <MessageCircle size={18} />
-                  </button>
-                  <button onClick={() => { setSelectedStudent(student); setIsViewOpen(true); }} className="p-2 text-slate-400 hover:text-blue-600 transition-all">
-                    <Eye size={18} />
-                  </button>
-                  <button onClick={() => { setSelectedStudent(student); setIsEditOpen(true); }} className="p-2 text-slate-400 hover:text-slate-900 transition-all">
-                    <Edit3 size={18} />
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-8 py-5 text-right space-x-1">
+                    <button 
+                      onClick={() => sendWhatsAppNotification(student)}
+                      className={`p-2 rounded-lg transition-all ${student.student_id ? 'text-green-500 hover:bg-green-50' : 'text-slate-200'}`}
+                    >
+                      <MessageCircle size={18} />
+                    </button>
+                    <button onClick={() => { setSelectedStudent(student); setIsViewOpen(true); }} className="p-2 text-slate-400 hover:text-blue-600 transition-all">
+                      <Eye size={18} />
+                    </button>
+                    <button onClick={() => { setSelectedStudent(student); setIsEditOpen(true); }} className="p-2 text-slate-400 hover:text-slate-900 transition-all">
+                      <Edit3 size={18} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr><td colSpan={5} className="py-20 text-center text-slate-400 font-medium text-sm">No students found.</td></tr>
+            )}
           </tbody>
         </table>
+
+        {/* Pagination UI */}
+        {totalPages > 1 && (
+          <div className="px-8 py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+              Page {currentPage} of {totalPages}
+            </p>
+            <div className="flex items-center gap-2">
+              <button 
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => prev - 1)}
+                className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-[#2563EB] disabled:opacity-50 disabled:hover:text-slate-400 transition-all"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button 
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-[#2563EB] disabled:opacity-50 disabled:hover:text-slate-400 transition-all"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* View Modal */}
