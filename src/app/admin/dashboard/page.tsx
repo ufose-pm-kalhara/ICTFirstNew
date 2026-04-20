@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react'; // Added useCallback
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Calendar, Users, CreditCard, History, AlertCircle, ChevronRight, ArrowUpRight } from 'lucide-react';
+import { Plus, Calendar, Users, CreditCard, History, AlertCircle, ArrowUpRight } from 'lucide-react';
 
 interface Student {
   id: number;
@@ -36,11 +36,11 @@ export default function AdminDashboard() {
     month: 'long', day: 'numeric', year: 'numeric'
   });
 
-  // Wrapped in useCallback to allow re-triggering safely
   const loadData = useCallback(async () => {
     try {
+      // Keep loading visible if it's the first load or if data was lost
       const [studentRes, paymentRes] = await Promise.all([
-        fetch('/api/admin/students', { cache: 'no-store' }), // Prevent browser caching
+        fetch('/api/admin/students', { cache: 'no-store' }),
         fetch('/api/admin/payments', { cache: 'no-store' })
       ]);
       const studentData = await studentRes.json();
@@ -58,13 +58,26 @@ export default function AdminDashboard() {
   useEffect(() => {
     loadData();
     
-    // Optional: Refresh data when window gains focus (e.g., coming back from another tab/window)
+    // This ensures data is there when user clicks 'Back'
+    window.addEventListener('popstate', loadData);
     window.addEventListener('focus', loadData);
-    return () => window.removeEventListener('focus', loadData);
+    
+    return () => {
+      window.removeEventListener('popstate', loadData);
+      window.removeEventListener('focus', loadData);
+    };
   }, [loadData]);
 
+  // Handle Initial Loading State to prevent "disappearing" UI
+  if (loading && students.length === 0) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center font-bold text-slate-400 animate-pulse">
+        Updating Dashboard...
+      </div>
+    );
+  }
+
   const pendingApprovalCount = students.filter(s => s.status === 'Pending' || !s.student_id).length;
-  // Ensure we always filter live state
   const criticalPayments = payments.filter(p => p.status === 'pending').slice(0, 3);
   
   const thisMonthNewStudents = students.filter(s => {
@@ -96,7 +109,6 @@ export default function AdminDashboard() {
       {/* --- TOP STATS GRID --- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
         
-        {/* Card 1: Pending Payments */}
         <div 
           className="bg-white p-7 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group" 
           onClick={() => router.push('/admin/payments')}
@@ -114,7 +126,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Card 2: Total Students */}
         <div 
           className="bg-white p-7 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group" 
           onClick={() => router.push('/admin/students')}
@@ -132,7 +143,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Quick Actions Panel */}
         <div className="bg-[#2563EB] p-7 rounded-[2rem] text-white shadow-lg shadow-blue-100/50 flex flex-col justify-between">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold">Quick Actions</h2>
@@ -156,7 +166,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* --- ROW 2: ACTIVITY & CRITICAL DATA --- */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* Critical Pending Payments */}
@@ -168,7 +177,12 @@ export default function AdminDashboard() {
           
           <div className="space-y-3">
             {criticalPayments.length > 0 ? criticalPayments.map(p => (
-              <div key={p.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-200 transition-all cursor-pointer" onClick={() => router.push(`/admin/payments/${p.id}`)}>
+              <div 
+                key={p.id} 
+                className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-200 transition-all cursor-pointer" 
+                // FIXED NAVIGATION PATH
+                onClick={() => router.push(`/admin/payments?id=${p.id}`)}
+              >
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600"><AlertCircle size={18} /></div>
                   <div>
