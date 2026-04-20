@@ -18,9 +18,11 @@ export async function middleware(req: NextRequest) {
 
   // 2. NO TOKEN CASE
   if (!token) {
-    // If trying to access protected areas without a token, go to login
     if (pathname.startsWith('/student') || pathname.startsWith('/admin')) {
-      return NextResponse.redirect(new URL('/login', req.url));
+      const response = NextResponse.redirect(new URL('/login', req.url));
+      // Ensure no cache on redirect
+      response.headers.set('Cache-Control', 'no-store, max-age=0');
+      return response;
     }
     return NextResponse.next();
   }
@@ -30,42 +32,53 @@ export async function middleware(req: NextRequest) {
     const { payload } = await jwtVerify(token, secret);
     const userRole = payload.role as string;
 
+    let response = NextResponse.next();
+
     // 4. LOGIN REDIRECT: If already logged in, don't show the login page
     if (pathname === '/login') {
       const dest = userRole === 'admin' ? '/admin/dashboard' : '/student/dashboard';
-      return NextResponse.redirect(new URL(dest, req.url));
+      response = NextResponse.redirect(new URL(dest, req.url));
     }
 
     // 5. ADMIN PROTECTION
-    if (pathname.startsWith('/admin')) {
+    else if (pathname.startsWith('/admin')) {
       if (userRole !== 'admin') {
         console.warn(`🚨 Unauthorized Admin access attempt by: ${userRole}`);
-        return NextResponse.redirect(new URL('/student/dashboard', req.url));
+        response = NextResponse.redirect(new URL('/student/dashboard', req.url));
       }
-      return NextResponse.next();
     }
 
     // 6. STUDENT PROTECTION
-    if (pathname.startsWith('/student')) {
-      // Admins are usually allowed to see student pages; otherwise check for 'student' only
+    else if (pathname.startsWith('/student')) {
       if (userRole !== 'student' && userRole !== 'admin') {
-        return NextResponse.redirect(new URL('/login', req.url));
+        response = NextResponse.redirect(new URL('/login', req.url));
       }
-      return NextResponse.next();
     }
 
-    return NextResponse.next();
+    /**
+     * CACHE PREVENTION:
+     * This is the fix for the back-button issue. By setting these headers, 
+     * we tell the browser "Do not store this page in memory." 
+     * When the user clicks 'Back' after logout, the browser is forced 
+     * to run this middleware again, which will find no token and redirect to login.
+     */
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+
+    return response;
+
   } catch (error) {
-    // Token is likely expired or tampered with
     console.error("Middleware Auth Error:", error);
     const loginUrl = new URL('/login', req.url);
     const response = NextResponse.redirect(loginUrl);
-    response.cookies.delete('session_token'); // Wipe the invalid token
+    response.cookies.delete('session_token'); 
+    // Prevent caching the redirected login page too
+    response.headers.set('Cache-Control', 'no-store, max-age=0');
     return response;
   }
 }
 
-// Ensure the middleware runs on the correct paths
 export const config = {
   matcher: [
     '/admin/:path*',

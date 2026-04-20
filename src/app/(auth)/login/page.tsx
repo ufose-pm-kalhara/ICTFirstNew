@@ -25,11 +25,15 @@ export default function LoginPage() {
 
       if (data.success) {
         const userRole = data.role || data.user?.role;
-        if (userRole === 'admin') {
-          window.location.href = '/admin/dashboard';
-        } else {
-          window.location.href = '/student/dashboard';
-        }
+        const targetPath = userRole === 'admin' ? '/admin/dashboard' : '/student/dashboard';
+        
+        /**
+         * SECURITY UPDATE: 
+         * Using window.location.replace prevents the login page from 
+         * staying in the browser history. This helps break the 
+         * back-button loop after logout.
+         */
+        window.location.replace(targetPath);
       } else {
         setError(data.message || 'Invalid Student ID or Password');
       }
