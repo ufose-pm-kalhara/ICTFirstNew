@@ -21,24 +21,33 @@ export default function LoginPage() {
         body: JSON.stringify(formData),
       });
 
+      // Handle potential non-JSON responses (like 500 errors or HTML error pages)
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server returned a non-JSON response. Please check your API.");
+      }
+
       const data = await res.json();
 
       if (data.success) {
         const userRole = data.role || data.user?.role;
         const targetPath = userRole === 'admin' ? '/admin/dashboard' : '/student/dashboard';
-        
-        /**
-         * SECURITY UPDATE: 
-         * Using window.location.replace prevents the login page from 
-         * staying in the browser history. This helps break the 
-         * back-button loop after logout.
-         */
         window.location.replace(targetPath);
       } else {
-        setError(data.message || 'Invalid Student ID or Password');
+        // Ensure we capture the message from the API or fallback to a default
+        setError(data.error || data.message || 'Invalid Student ID or Password');
       }
-    } catch (err) {
-      setError('Connection failed. Please ensure your database is running.');
+    } catch (err: unknown) {
+      // Type-safe error handling
+      let errorMessage = 'An unexpected error occurred.';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message === 'Failed to fetch' 
+          ? 'Connection failed. Please ensure your database is running.' 
+          : err.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -55,7 +64,6 @@ export default function LoginPage() {
             className="md:w-1/2 p-12 text-white flex flex-col justify-between relative overflow-hidden"
             style={{ background: 'linear-gradient(180deg, #2B6390 0%, #1A5783 100%)' }}
           >
-            {/* Visual element matching sidebar style subtle overlay */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
             
             <div className="relative z-10">
@@ -87,9 +95,10 @@ export default function LoginPage() {
               <h2 className="text-[28px] font-black text-slate-900 mb-1 tracking-tight">Portal Login</h2>
               <p className="text-slate-400 text-[13px] font-semibold mb-10">Please enter your credentials to access the portal.</p>
 
+              {/* Error Message Display */}
               {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-[13px] font-bold">
-                  {error}
+                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-[13px] font-bold animate-in fade-in slide-in-from-top-1 duration-300">
+                  <span className="mr-2">⚠️</span> {error}
                 </div>
               )}
 
@@ -125,7 +134,7 @@ export default function LoginPage() {
                     <button 
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                      className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors text-xl"
                     >
                       {showPassword ? "🔒" : "👁️"}
                     </button>
@@ -159,14 +168,13 @@ export default function LoginPage() {
         </div>
       </main>
 
-      {/* Footer synchronized with Admin Header/Footer style */}
+      {/* Footer */}
       <footer className="max-w-7xl mx-auto w-full px-10 py-10 flex flex-col md:flex-row justify-between items-center text-[13px] text-slate-400 font-semibold border-t border-slate-100">
         <div className="text-center md:text-left mb-6 md:mb-0">
           <div className="text-[#2B6390] font-black text-lg mb-1">ICTFIRST.lk</div>
           <p>© 2024 Admin Portal • Mrs. Kalugampitiya</p>
         </div>
 
-        {/* Support Button Added Here */}
         <a 
           href="https://wa.me/94776174776" 
           target="_blank" 

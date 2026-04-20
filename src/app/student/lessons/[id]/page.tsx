@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Play, FileText, Download, ChevronLeft, Lock, Info, Video } from 'lucide-react';
+import { Play, FileText, Download, ChevronLeft, Lock, Info, Video, UserCheck } from 'lucide-react';
 
 interface VideoItem {
   url: string;
@@ -23,17 +23,24 @@ interface Lesson {
 interface User {
   full_name: string;
   student_id: string;
+  email: string; // Added email for verification
 }
 
 const getEmbedUrl = (url: string | null) => {
   if (!url) return "";
   const trimUrl = url.trim();
   if (trimUrl.includes("drive.google.com")) return trimUrl.replace(/\/view.*|\/edit.*/, "/preview");
+  
   let videoId = "";
   if (trimUrl.includes("v=")) videoId = trimUrl.split("v=")[1].split("&")[0];
   else if (trimUrl.includes("youtu.be/")) videoId = trimUrl.split("youtu.be/")[1].split("?")[0];
   else if (trimUrl.includes("youtube.com/live/")) videoId = trimUrl.split("live/")[1].split("?")[0];
-  else if (trimUrl.includes("embed/")) return `${trimUrl}?rel=0&modestbranding=1&autoplay=1`;
+  else if (trimUrl.includes("embed/")) {
+    // Ensure parameters for private videos are maintained
+    return `${trimUrl}${trimUrl.includes('?') ? '&' : '?'}rel=0&modestbranding=1&autoplay=1`;
+  }
+  
+  // For private videos, YouTube requires the embed to be from the /embed/ path
   return videoId ? `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1` : trimUrl;
 };
 
@@ -123,7 +130,6 @@ export default function LessonDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20 select-none">
-      {/* Top Header */}
       <div className="bg-white border-b border-slate-100 sticky top-0 z-[60] px-6 py-4 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 font-bold text-[13px] uppercase tracking-wider hover:text-[#1A5783] transition-colors">
@@ -141,7 +147,6 @@ export default function LessonDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           
           <div className="lg:col-span-8">
-            {/* Video Section */}
             {videoList.length > 0 ? (
               <div className="relative w-full aspect-video bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl mb-10 border-[6px] border-white ring-1 ring-slate-200">
                 {!isBlocked ? (
@@ -152,9 +157,8 @@ export default function LessonDetailPage() {
                         src={getEmbedUrl(videoList[selectedIndex].url)} 
                         className="w-full h-full border-none" 
                         allowFullScreen 
-                        allow="autoplay" 
+                        allow="autoplay; encrypted-media" 
                       />
-                      {/* Watermark */}
                       <div className="absolute z-[100] pointer-events-none text-white/10 mix-blend-overlay" style={{ top: corners[cornerIndex].top, left: corners[cornerIndex].left }}>
                         <p className="font-black text-[14px] uppercase leading-none tracking-tighter">{user?.full_name}</p>
                         <p className="font-bold text-[10px] tracking-widest mt-1 opacity-50">{user?.student_id}</p>
@@ -162,14 +166,18 @@ export default function LessonDetailPage() {
                     </div>
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950">
-                      <button 
-                        onClick={handleStartVideo} 
-                        style={{ background: brandGradient }}
-                        className="w-24 h-24 rounded-full flex items-center justify-center shadow-3xl hover:scale-110 transition-all group"
-                      >
-                        <Play fill="white" className="text-white ml-1 group-hover:scale-110 transition-transform" size={40} />
-                      </button>
-                      <p className="text-white/40 font-bold uppercase tracking-[0.3em] text-[11px] mt-8">Initialize {videoList[selectedIndex].desc}</p>
+                      <div className="mb-6 flex flex-col items-center">
+                      
+                        <button 
+                            onClick={handleStartVideo} 
+                            style={{ background: brandGradient }}
+                            className="w-24 h-24 rounded-full flex items-center justify-center shadow-3xl hover:scale-110 transition-all group"
+                        >
+                            <Play fill="white" className="text-white ml-1 group-hover:scale-110 transition-transform" size={40} />
+                        </button>
+                      </div>
+                      <p className="text-white/40 font-bold uppercase tracking-[0.3em] text-[11px] mt-2">Initialize {videoList[selectedIndex].desc}</p>
+                      <p className="text-white/20 text-[9px] mt-4 max-w-xs text-center px-6 italic">Ensure you are logged into YouTube with your registered email to bypass privacy restrictions.</p>
                     </div>
                   )
                 ) : (
@@ -189,7 +197,6 @@ export default function LessonDetailPage() {
               </div>
             )}
 
-            {/* Tab Navigation */}
             <div className="flex gap-2 p-1.5 bg-slate-200/50 rounded-2xl mb-8 w-fit backdrop-blur-sm">
               <button 
                 onClick={() => setActiveTab('video')} 
@@ -205,7 +212,6 @@ export default function LessonDetailPage() {
               </button>
             </div>
 
-            {/* Tab Content */}
             {activeTab === 'video' ? (
               <div className="space-y-8">
                 <div>
@@ -250,7 +256,6 @@ export default function LessonDetailPage() {
             )}
           </div>
 
-          {/* Sidebar - Materials */}
           <div className="lg:col-span-4">
             <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm sticky top-32">
               <h3 className="font-black text-slate-900 uppercase text-[13px] tracking-wider mb-8 flex items-center gap-2">
@@ -289,10 +294,10 @@ export default function LessonDetailPage() {
               <div className="mt-10 p-5 bg-orange-50 rounded-2xl border border-orange-100">
                 <div className="flex items-center gap-2 text-orange-600 mb-2">
                     <Info size={16} />
-                    <p className="font-bold text-[12px] uppercase">Safety Note</p>
+                    <p className="font-bold text-[12px] uppercase">Playback Security</p>
                 </div>
-                <p className="text-orange-700/70 text-[12px] font-medium leading-snug">
-                    Each video part is limited to 3 views. Closing the tab or refreshing will count as a view.
+                <p className="text-orange-700/70 text-[11px] font-medium leading-snug">
+                    This video is set to private. If you see an access error, ensure you are logged into your Google account in this browser.
                 </p>
               </div>
             </div>
@@ -300,6 +305,15 @@ export default function LessonDetailPage() {
 
         </div>
       </div>
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string, value: string }) {
+  return (
+    <div className="flex justify-between items-center border-b border-slate-50 pb-2">
+      <span className="text-xs font-bold text-slate-400 uppercase">{label}</span>
+      <span className="text-sm font-semibold text-slate-700">{value}</span>
     </div>
   );
 }
