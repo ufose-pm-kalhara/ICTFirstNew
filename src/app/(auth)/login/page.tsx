@@ -21,7 +21,6 @@ export default function LoginPage() {
         body: JSON.stringify(formData),
       });
 
-      // Handle potential non-JSON responses (like 500 errors or HTML error pages)
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
         throw new Error("Server returned a non-JSON response. Please check your API.");
@@ -34,11 +33,9 @@ export default function LoginPage() {
         const targetPath = userRole === 'admin' ? '/admin/dashboard' : '/student/dashboard';
         window.location.replace(targetPath);
       } else {
-        // Ensure we capture the message from the API or fallback to a default
         setError(data.error || data.message || 'Invalid Student ID or Password');
       }
     } catch (err: unknown) {
-      // Type-safe error handling
       let errorMessage = 'An unexpected error occurred.';
       
       if (err instanceof Error) {
@@ -69,23 +66,37 @@ export default function LoginPage() {
             <div className="relative z-10">
               <h2 className="text-2xl font-black tracking-tight mb-16 text-white/90">ICTFIRST.lk</h2>
               
-              <h1 className="text-5xl font-black leading-[1.1] mb-6 italic tracking-tighter uppercase">
-                Welcome Back to Your Academic Atelier.
-              </h1>
-              <p className="text-blue-50/80 text-[15px] font-semibold leading-relaxed max-w-md">
-                Continue your journey of intellectual clarity and professional mastery with our curated educational resources.
-              </p>
+              <div className="space-y-5">
+                <h1 className="text-4xl md:text-5xl font-black leading-[1.15] tracking-tighter uppercase italic">
+                  Welcome Back <br />
+                  <span className="text-2xl md:text-3xl not-italic font-bold  px-3 py-1 rounded-lg inline-block mt-2">
+                    නැවතත් සාදරයෙන් පිළිගනිමු
+                  </span>
+                </h1>
+                
+                <div className="space-y-4 max-w-md">
+                  <p className="text-blue-50/90 text-[16px] font-bold leading-relaxed border-l-4 border-white/30 pl-4">
+                    Continue your journey of intellectual clarity and professional mastery.
+                  </p>
+                  <p className="text-blue-100/70 text-[14px] font-medium leading-relaxed border-l-4 border-white/30 pl-4">
+                    ඔබේ අධ්‍යාපනික සිහිනය සැබෑ කර ගැනීමට අවශ්‍ය සියලුම සම්පත් මෙතැනින් ලබාගන්න.
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="relative z-10 flex items-center gap-4 mt-8">
-              <div className="flex -space-x-2">
+            <div className="relative z-10 flex items-center gap-4 mt-12">
+              <div className="flex -space-x-3">
                 {[11, 12, 13].map((i) => (
-                  <div key={i} className="w-10 h-10 rounded-xl border-2 border-white/20 bg-slate-400/30 overflow-hidden backdrop-blur-sm">
+                  <div key={i} className="w-10 h-10 rounded-full border-2 border-[#1A5783] bg-slate-400 overflow-hidden shadow-lg">
                     <img src={`https://i.pravatar.cc/100?img=${i}`} alt="user" className="w-full h-full object-cover" />
                   </div>
                 ))}
               </div>
-              <p className="text-[11px] font-bold text-blue-100/70 uppercase tracking-widest">2,000+ active learners</p>
+              <div>
+                <p className="text-[11px] font-black text-white uppercase tracking-[0.15em]">2,000+ Students</p>
+                <p className="text-[10px] font-bold text-blue-200/60">Active Learning Community</p>
+              </div>
             </div>
           </div>
 

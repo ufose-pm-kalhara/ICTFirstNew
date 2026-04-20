@@ -22,11 +22,10 @@ export default function RegisterPage() {
   const [isSuccess, setIsSuccess] = useState(false); 
   const router = useRouter();
 
-  // Helper to validate password strength
   const passChecks = {
     length: formData.password.length >= 8,
     hasUpper: /[A-Z]/.test(formData.password),
-    hasSymbol: /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
+    hasSymbol: /[!@#$%^&*(),.?":{}|<> ]/.test(formData.password)
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,16 +126,30 @@ export default function RegisterPage() {
       </nav>
 
       <main className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center px-6 py-16 md:py-24">
+        {/* Left Side: Branding Area */}
         <div className="md:pr-12">
-          <span className="text-[#1A5683] uppercase font-bold text-xs tracking-[0.15em]">Academic Atelier</span>
-          <h1 className="text-6xl font-extrabold text-[#1A5683] mt-3 leading-[1.15]">
-            Begin Your<br /> Intellectual<br /> Journey.
-          </h1>
-          <p className="text-gray-600 mt-10 max-w-xl leading-relaxed">
-            Join a community dedicated to rigorous academic excellence and personalized mentorship.
-          </p>
+          <span className="text-[#1A5683] uppercase font-bold text-xs tracking-[0.15em] bg-[#1A5683]/5 px-3 py-1 rounded-full border border-[#1A5683]/10">
+            ICTFIRST 
+          </span>
+          <div className="mt-6 space-y-2">
+            <h1 className="text-5xl md:text-6xl font-black text-[#1A5683] leading-[1.1]">
+              Begin Your<br /> Intellectual<br /> Journey.
+            </h1>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-500 mt-2">
+              ඔබේ දැනුමේ ගවේෂණය මෙතැනින් අරඹන්න.
+            </h2>
+          </div>
+          <div className="mt-10 space-y-4 border-l-4 border-[#1A5683]/20 pl-6 py-2">
+            <p className="text-gray-600 text-[17px] font-medium leading-relaxed max-w-xl">
+              Join a community dedicated to rigorous academic excellence and personalized mentorship.
+            </p>
+            <p className="text-slate-500 text-[15px] font-medium leading-relaxed italic opacity-80">
+              විශිෂ්ට ප්‍රතිඵල සහ නිවැරදි මගපෙන්වීමක් සඳහා කැපවූ අපගේ අධ්‍යාපනික ප්‍රජාව හා අදම එක්වන්න.
+            </p>
+          </div>
         </div>
 
+        {/* Right Side: Register Form */}
         <div className="flex justify-center md:justify-end">
           <div className="w-full max-w-xl p-10 bg-white border border-gray-100 rounded-[2.5rem] shadow-2xl">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
@@ -222,8 +235,8 @@ export default function RegisterPage() {
 
               <div className="flex items-start">
                 <input id="terms" type="checkbox" required checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#1A5683] focus:ring-[#1A5683] cursor-pointer" />
-                <label htmlFor="terms" className="ml-3 text-sm text-gray-600 cursor-pointer">
-                    I agree to the <Link href="/terms" className="text-[#1A5683] font-medium underline">Terms</Link> and <Link href="/privacy" className="text-[#1A5683] font-medium underline">Privacy Policy</Link>.
+                <label htmlFor="terms" className="ml-3 text-sm text-gray-600 cursor-pointer leading-relaxed">
+                    I agree to the <Link href="/terms" className="text-[#1A5683] font-bold hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-[#1A5683] font-bold hover:underline">Privacy Policy</Link>.
                 </label>
               </div>
 
