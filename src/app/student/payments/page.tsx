@@ -1,23 +1,41 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // 1. Define the Payment Interface
 interface Payment {
   id: number;
   amount: number;
   status: 'pending' | 'approved' | 'rejected';
+  lesson_id?: string; 
   created_at: string;
 }
 
-export default function PaymentsPage() {
+function PaymentsContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams(); 
+  
   const [payments, setPayments] = useState<Payment[]>([]);
   const [amount, setAmount] = useState<string>('');
+  const [billingMonth, setBillingMonth] = useState<string>('');
+  const [lessonId, setLessonId] = useState<string | null>(null); 
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
 
-  // 2. Wrap fetchPayments in useCallback to prevent re-renders
+  useEffect(() => {
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    setBillingMonth(months[new Date().getMonth()]);
+
+    const id = searchParams.get('lessonId');
+    if (id) setLessonId(id);
+  }, [searchParams]);
+
   const fetchPayments = useCallback(async () => {
     try {
       const res = await fetch('/api/student/payments');
@@ -49,7 +67,7 @@ export default function PaymentsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !image) {
+    if (!amount || !image || !billingMonth) {
       alert("Please enter amount and upload a slip.");
       return;
     }
@@ -59,15 +77,20 @@ export default function PaymentsPage() {
       const res = await fetch('/api/student/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: parseFloat(amount), proof_url: image }),
+        body: JSON.stringify({ 
+          amount: parseFloat(amount), 
+          proof_url: image, 
+          billing_month: billingMonth,
+          lesson_id: lessonId 
+        }),
       });
 
       const data = await res.json();
       if (data.success) {
-        alert("Slip uploaded successfully!");
+        setShowSuccess(true); 
         setAmount('');
         setImage(null);
-        fetchPayments(); // Refresh the list
+        fetchPayments();
       } else {
         alert("Upload failed. Please try again.");
       }
@@ -87,9 +110,29 @@ export default function PaymentsPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+    <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start relative">
       
-      {/* 1. Page heading Section */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-in zoom-in duration-300">
+            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Payment Received!</h3>
+            <p className="text-gray-500 ">Your payment slip for {billingMonth} has been uploaded successfully and is now under review.
+            <br></br><span className="block mt-2 mb-3 text-sm">ඔබගේ {billingMonth} මාසයට අදාළ ගෙවීම් රිසිට්පත සාර්ථකව උඩුගත කර ඇති අතර එය දැන් පරීක්ෂාවට ලක් වෙමින් පවතී.</span></p>
+            <button 
+              onClick={() => router.push('/student/lessons')} 
+              className="w-full py-4 bg-[#2B6390] text-white font-bold rounded-xl hover:bg-[#1A5783] transition-colors"
+            >
+              Go to Lessons
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="lg:col-span-12 mb-6">
         <h1 className="text-5xl font-bold text-[#2B6390] tracking-tight ">
           Payment Submission
@@ -99,37 +142,43 @@ export default function PaymentsPage() {
         </p>
       </div>
 
-      {/* 2. Upload Section */}
       <div className=" lg:col-span-7 space-y-8 ">
-
-        {/* Billing Details */}
-        <div className="bg-white p-10 rounded-xl shadow-sm border">
-
+        <div className="bg-white p-10 rounded-xl shadow-sm ">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#8FC3F6] text-[#003D63] font-semibold text-sm">1</div>  
             <h2 className="font-semibold  text-gray-700 mb-1">
               Billing Details
             </h2>
-        </div>
+          </div>
+
+          {lessonId && (
+            <div className="mb-4 px-4 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs font-bold text-[#2B6390] uppercase tracking-wider">
+              Paying for Lesson ID: {lessonId}
+            </div>
+          )}
 
           <label className="text-sm text-gray-500">
             Select Billing Month
           </label>
 
-          <select defaultValue="" className="w-full h-10 mt-2 p-3  text-sm text-gray-800 bg-[#DEE3E6] rounded-xl outline-none focus:ring-1 focus:ring-blue-200">
-            <option value="" disabled >Select the month you are paying for...</option>
-            <option >January</option>
-            <option>February</option>
-            <option>March</option>
-            <option>April</option>
-            <option>May</option>
-            <option>June</option>
-            <option>July</option>
-            <option>August</option>
-            <option>September</option>
-            <option>October</option>
-            <option>November</option>
-            <option>December</option>
+          <select 
+            value={billingMonth}
+            onChange={(e) => setBillingMonth(e.target.value)}
+            className="w-full h-10 mt-2 p-3 text-sm text-gray-800 bg-[#DEE3E6] rounded-xl outline-none focus:ring-1 focus:ring-blue-200"
+          >
+            <option value="" disabled>Select the month you are paying for...</option>
+            <option value="January">January</option>
+            <option value="February">February</option>
+            <option value="March">March</option>
+            <option value="April">April</option>
+            <option value="May">May</option>
+            <option value="June">June</option>
+            <option value="July">July</option>
+            <option value="August">August</option>
+            <option value="September">September</option>
+            <option value="October">October</option>
+            <option value="November">November</option>
+            <option value="December">December</option>
           </select>
 
           <div className="mt-4">
@@ -141,13 +190,12 @@ export default function PaymentsPage() {
               placeholder="Enter amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full h-10 mt-2 p-3 text-sm text-gray-800 bg-[#DEE3E6] rounded-xl outline-none focus:ring-1 focus:ring-blue-200"
+              className="w-full h-10 mt-2 p-3 text-sm text-gray-800 bg-[#DEE3E6] rounded-xl outline-none focus:ring-1 focus:ring-blue-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
         </div>
 
-        {/* Evidence Upload */}
-        <div className="bg-white p-10 rounded-xl shadow-sm border">
+        <div className="bg-white p-10 rounded-xl shadow-sm ">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#8FC3F6] text-[#003D63] font-semibold text-sm">2</div>
             <h2 className="font-semibold text-gray-700 mb-1">
@@ -177,7 +225,6 @@ export default function PaymentsPage() {
                 </div>
               ) : (
                 <>
-                {/* Upload Icon */}
                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
                   <svg 
                     className="w-8 h-8 text-[#2B6390]" 
@@ -194,21 +241,18 @@ export default function PaymentsPage() {
                 <p className="text-gray-800 font-bold">
                   Click to upload bank slip </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  JPEG, PNG, or PDF (Max 5MB) </p>
+                  JPEG or PNG (Max 2MB) </p>
                </>
               )}
             </label>
           </div>
         </div>
 
-        {/* Submit Button */}
         <button
           onClick={handleSubmit}
           disabled={submitting}
           className="w-full flex items-center justify-center gap-2 py-4 rounded-xl text-white font-semibold text-lg transition-all active:scale-[0.98]
           disabled:opacity-70 disabled:cursor-not-allowed bg-gradient-to-r from-[#2B6390] to-[#1A5783] shadow-[0_8px_24px_0_rgba(43,99,144,0.2)]"> 
-
-         {/*Icon */}
           <svg 
             className="w-6 h-6" 
             viewBox="0 0 24 24" 
@@ -221,13 +265,9 @@ export default function PaymentsPage() {
             <path d="m9 12 2 2 4-4" />
           </svg> 
         Submit Payment</button>
-      
       </div>
 
-      {/* 3. Notice Section */}
       <div className="lg:col-span-4 space-y-6">
-
-        {/* Important Note */}
         <div className="relative bg-[#C6C1F2] p-8  overflow-hidden shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] rounded-tl-xl rounded-tr-[40px] rounded-bl-xl rounded-br-xl">
           <div className="absolute bottom-0 right-0 opacity-10 rotate-180 rotate-[165deg] translate-x-7 translate-y-8 pointer-events-none">
             <svg 
@@ -236,17 +276,13 @@ export default function PaymentsPage() {
               viewBox="0 0 24 24" 
               fill="currentColor" 
               className="text-[#4A4371]">
-
-              {/* Receipt Body with jagged bottom */}
               <path d="M4 2h16l-1 20-3-2-3 2-3-2-3 2-3-2L4 2z" />
-              {/* Receipt Lines */}
               <rect x="7" y="6" width="10" height="2" rx="0.5" fill="white" fillOpacity="0.5" />
               <rect x="7" y="10" width="10" height="2" rx="0.5" fill="white" fillOpacity="0.5" />
               <rect x="7" y="14" width="6" height="2" rx="0.5" fill="white" fillOpacity="0.5" />
             </svg>
           </div>
           
-          {/* Content */}
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-5 h-5 rounded-full border border-[#3E3C63] flex items-center justify-center text-xs text-[#3E3C63]">i</div>
@@ -258,22 +294,22 @@ export default function PaymentsPage() {
             <p className="text-base mt-3 leading-relaxed text-[#3E3C63CC]">
               Please ensure the reference number  and date of transaction are clearly 
               visible on the slip. Incomplete or  blurred images may lead to a delay in  access to course materials.
+              <br></br>
+              <span className="block mt-3 text-sm">
+              කරුණාකර ගනුදෙනු අංකය සහ ගනුදෙනු දිනය රිසිට්පතේ පැහැදිලිව පෙනෙන ලෙස සලස්වන්න.
+              අසම්පූර්ණ හෝ පැහැදිලි නොවන රිසිට්පත් හේතුවෙන් පාඨමාලා ද්‍රව්‍ය වෙත ප්‍රවේශය ප්‍රමාද විය හැක.
+              </span>
             </p>
           </div>
         </div>
 
-        
-        {/* Verification Process  */}
         <div className="bg-[#F1F4F5] p-8 rounded-[20px] shadow-sm border border-gray-100/50">
           <h3 className="text-l font-semibold text-gray-800 mb-8">
             Verification Process
           </h3>
           
-          <div className="space-y-8"> {/* list items */}
-            
-            {/* Item 1: Immediate Acknowledgment */}
+          <div className="space-y-8">
             <div className="flex items-start gap-5">
-              {/* Icon */}
               <div className="flex-shrink-0 mt-1">
                 <svg className="w-6 h-6 text-[#2B6390]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10"></circle>
@@ -283,14 +319,13 @@ export default function PaymentsPage() {
               <div>
                 <p className="font-semibold text-sm text-gray-800 leading-tight">Immediate Acknowledgment</p>
                 <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-                  You'll receive an email confirmation immediately after submission.
+                  You&apos;ll receive an email confirmation immediately after submission.
+                  <br></br><span className="block mt-1 text-xs">ඉදිරිපත් කිරීමෙන් පසු ඔබට වහාම විද්‍යුත් තැපැල් තහවුරු කිරීමක් ලැබෙනු ඇත.</span>
                 </p>
               </div>
             </div>
 
-            {/* Item 2: Manual Audit */}
             <div className="flex items-start gap-5">
-              {/* Icon */}
               <div className="flex-shrink-0 mt-1">
                 <svg className="w-6 h-6 text-[#2B6390]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10"></circle>
@@ -303,19 +338,18 @@ export default function PaymentsPage() {
                 </p>
                 <p className="text-sm text-gray-500 mt-1 leading-relaxed">
                   Our finance team audits payments every morning at 9:00 AM.
+                  <br></br><span className="block mt-1 text-xs">අපගේ මූල්‍ය කණ්ඩායම සෑම උදෑසනකම පෙ.ව. 9:00 ට ගෙවීම් පරීක්ෂා කරයි.</span>
                 </p>
               </div>
             </div>
 
-            {/* Item 3: Access Granted */}
             <div className="flex items-start gap-5">
-              {/* Icon */}
               <div className="flex-shrink-0 mt-1">
                 <svg className="w-6 h-6 text-[#2B6390]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
                   <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
                   <path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3"></path>
-                  <path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5"></path>
+                  <path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-3"></path>
                 </svg>
               </div>
               <div>
@@ -324,18 +358,20 @@ export default function PaymentsPage() {
                 </p>
                 <p className="text-sm text-gray-500 mt-1 leading-relaxed">
                   Once verified, your dashboard materials will unlock automatically.
+                  <br></br><span className="block mt-1 text-xs">සත්‍යාපනය කළ පසු, ඔබගේ materials ස්වයංක්‍රීයව විවෘත වේ.</span>
                 </p>
               </div>
             </div>
-          
           </div>
         </div>
-
-      {/* Having trouble? Section */}
-        <button className="group w-full flex items-center justify-between p-5 bg-[#F8F9FA] border border-gray-200 rounded-[22px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:bg-gray-50 transition-all duration-300">
-          
+        {/* WhatsApp Support Link */}
+        <a 
+          href="https://wa.me/9412345697" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="group w-full flex items-center justify-between p-5 bg-[#F8F9FA] border border-gray-200 rounded-[22px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:bg-gray-50 transition-all duration-300"
+        >
           <div className="flex items-center gap-4">
-            {/* Light Blue Icon  */}
             <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-[#DCEAF8] flex-shrink-0">
               <svg 
                 className="w-6 h-6 text-[#2B6390]" 
@@ -350,19 +386,15 @@ export default function PaymentsPage() {
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
             </div>
-
-            {/* Text Labels */}
             <div className="text-left">
               <h4 className="text-sm font-bold text-gray-800 leading-tight">
                 Having trouble?
               </h4>
               <p className="text-sm text-gray-500 mt-0.5 font-medium">
-                Chat with our support team
+                Text to this number via WhatsApp
               </p>
             </div>
           </div>
-
-          {/* Right Arrow - changes color on group hover */}
           <svg 
             className="w-6 h-6 text-gray-300 group-hover:text-[#2B6390] transform group-hover:translate-x-1 transition-all duration-300" 
             viewBox="0 0 24 24" 
@@ -374,11 +406,16 @@ export default function PaymentsPage() {
             <line x1="5" y1="12" x2="19" y2="12" />
             <polyline points="12 5 19 12 12 19" />
           </svg>
-        </button>
-
-
+        </a>
       </div>
-  </div>
-  
+    </div>
+  );
+}
+
+export default function PaymentsPage() {
+  return (
+    <Suspense fallback={<div className="p-20 text-center font-black text-[#1A5683] animate-pulse uppercase tracking-widest">Loading...</div>}>
+      <PaymentsContent />
+    </Suspense>
   );
 }
