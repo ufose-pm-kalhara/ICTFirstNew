@@ -51,14 +51,14 @@ export async function PATCH(req: Request) {
     if (status === 'completed' || status === 'approved') {
   await createNotification(
     targetStudentId,
-    "ගෙවීම් අනුමත කරන ලදී ✅",
+    "Payment Approved ✅",
     `${month} මාසය සඳහා රු. ${amount} ක ඔබගේ ගෙවීම සාර්ථකව තහවුරු කරන ලදී.`
   );
 } else if (status === 'rejected') {
   await createNotification(
     targetStudentId,
-    "ගෙවීම් ප්‍රතික්ෂේප කරන ලදී ❌",
-    `${month} මාසය සඳහා ඔබ කළ ගෙවීම ප්‍රතික්ෂේප කර ඇත. හේතුව: ${remarks || 'වලංගු නොවන සාක්ෂි (Invalid proof)'}. කරුණාකර සහය කණ්ඩායම අමතන්න.`
+    "Payment Rejected ❌",
+    `${month} මාසය සඳහා ඔබ කළ ගෙවීම ප්‍රතික්ෂේප කර ඇත. කරුණාකර සහය කණ්ඩායම අමතන්න.`
   );
 }
 

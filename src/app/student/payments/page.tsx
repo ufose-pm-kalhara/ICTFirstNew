@@ -133,7 +133,9 @@ function PaymentsContent() {
               </svg>
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Payment Received!</h3>
-            <p className="text-gray-500 mb-8">Your payment slip for {billingMonth} has been uploaded successfully and is now under review.</p>
+            <p className="text-gray-500 mb-8">Your payment slip for {billingMonth} has been uploaded successfully and is now under review.
+              <br></br><span className="block mt-2 mb-3 text-sm">ඔබගේ {billingMonth} මාසයට අදාළ ගෙවීම් රිසිට්පත සාර්ථකව උඩුගත කර ඇති අතර එය දැන් පරීක්ෂාවට ලක් වෙමින් පවතී.</span>
+            </p>
             <button 
               onClick={() => router.push('/student/lessons')} 
               className="w-full py-4 bg-[#2B6390] text-white font-bold rounded-xl hover:bg-[#1A5783] transition-colors"
@@ -150,7 +152,7 @@ function PaymentsContent() {
         </h1>
         <p className="text-[#526070] text-base mt-3 leading-relaxed">
           Securely upload your tuition fee receipts. Our academic team will verify the <br></br> transaction within 24-48 business hours.
-          <br></br><span className="block mt-2 mb-3 text-sm">ඔබගේ {billingMonth} මාසයට අදාළ ගෙවීම් රිසිට්පත සාර්ථකව උඩුගත කර ඇති අතර එය දැන් පරීක්ෂාවට ලක් වෙමින් පවතී.</span>
+          
         </p>
       </div>
 

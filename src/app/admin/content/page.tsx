@@ -177,7 +177,7 @@ export default function ContentManagement() {
     <div className="font-sans text-slate-900">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Vault Management</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Content Management</h1>
           <p className="text-slate-500 font-medium mt-1">Manage and publish learning materials for students.</p>
         </div>
         <button 
