@@ -49,18 +49,18 @@ export async function PATCH(req: Request) {
     // 3. Trigger Notification based on the new status
     // FIX: Check for both 'completed' and 'approved' to ensure it triggers
     if (status === 'completed' || status === 'approved') {
-      await createNotification(
-        targetStudentId,
-        "Payment Approved ✅",
-        `Your payment of Rs. ${amount} for ${month} has been verified successfully.`
-      );
-    } else if (status === 'rejected') {
-      await createNotification(
-        targetStudentId,
-        "Payment Rejected ❌",
-        `Your payment for ${month} was rejected. Reason: ${remarks || 'Invalid proof'}. Please re-upload.`
-      );
-    }
+  await createNotification(
+    targetStudentId,
+    "ගෙවීම් අනුමත කරන ලදී ✅",
+    `${month} මාසය සඳහා රු. ${amount} ක ඔබගේ ගෙවීම සාර්ථකව තහවුරු කරන ලදී.`
+  );
+} else if (status === 'rejected') {
+  await createNotification(
+    targetStudentId,
+    "ගෙවීම් ප්‍රතික්ෂේප කරන ලදී ❌",
+    `${month} මාසය සඳහා ඔබ කළ ගෙවීම ප්‍රතික්ෂේප කර ඇත. හේතුව: ${remarks || 'වලංගු නොවන සාක්ෂි (Invalid proof)'}. කරුණාකර සහය කණ්ඩායම අමතන්න.`
+  );
+}
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -137,7 +137,6 @@ export default function StudentDashboard() {
   const liveAccessStatus = liveSession ? getLessonStatus(liveSession.lesson_id) : 'no_history';
   const hasLiveAccess = liveAccessStatus === 'approved';
 
-  // Memoized sorting by latest date first
   const { unlockedLessons, lockedLessons } = useMemo(() => {
     const sortedLessons = [...lessons].sort((a, b) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -279,7 +278,10 @@ export default function StudentDashboard() {
         <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 border border-slate-100 flex flex-col justify-between shadow-sm">
           <div>
             <h3 className="text-[11px] md:text-[12px] font-bold uppercase tracking-widest text-[#1A5783] mb-4 md:mb-5">Instructor&apos;s Note</h3>
-            <p className="text-slate-600 font-semibold text-[14px] md:text-[15px] leading-relaxed italic">&quot;Please ensure you have a stable internet connection before joining. Recorded sessions will be available in the Lessons tab later.&quot;</p>
+            <p className="text-slate-600 font-semibold text-[14px] md:text-[15px] leading-relaxed italic">&quot;Please ensure you have a stable internet connection before joining. Recorded sessions will be available in the Lessons tab later.&quot;
+              <br /><br /><span className="block mt-2 text-xs leading-relaxed italic">
+            &quot;කරුණාකර සම්බන්ධ වීමට පෙර ඔබට ස්ථාවර අන්තර්ජාල සම්බන්ධතාවයක් ඇති බව තහවුරු කරගන්න. පටිගත කළ පන්ති පසුව පාඩම් (Lessons) ටැබ් තුළින් ලබාගත හැකිය.&quot;</span>
+            </p>
           </div>
           <div className="mt-6 md:mt-8 pt-6 border-t border-slate-50 flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-[#1A5783] font-bold">G{data?.grade}</div>
@@ -288,7 +290,6 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* RECENTLY UNLOCKED SECTION */}
       {unlockedLessons.length > 0 && (
         <div className="mb-12 md:mb-16">
           <div className="flex items-center justify-between mb-6 md:mb-8">
@@ -309,7 +310,6 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      {/* LOCKED MATERIALS SECTION - Now sliced to 4 with View All link */}
       <div className="mb-10 md:mb-12">
         <div className="flex items-center justify-between mb-6 md:mb-8">
           <div className="flex items-center gap-3">
@@ -335,6 +335,28 @@ export default function StudentDashboard() {
           ) : null}
         </div>
       </div>
+
+      {/* PENDING MODAL */}
+      {showPendingModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2.5rem] p-8 md:p-10 max-w-sm w-full shadow-2xl text-center scale-in-center transition-transform duration-300">
+            <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6">
+              ⏳
+            </div>
+            <h3 className="text-xl font-black text-slate-800 mb-3 uppercase tracking-tight">Verification In Progress</h3>
+            <p className="text-slate-500 text-[14px] md:text-[15px] leading-relaxed font-medium mb-8">
+              අපි දැනට ඔබගේ ගෙවීම් වාර්තා පරීක්ෂා කරමින් සිටිමු. පැය කිහිපයකින් මෙය සක්‍රිය වනු ඇත.
+            </p>
+            <button 
+              onClick={() => setShowPendingModal(false)}
+              style={{ background: brandGradient }}
+              className="w-full py-4 text-white rounded-2xl font-bold text-[14px] uppercase tracking-widest shadow-lg shadow-blue-900/20 hover:opacity-90 active:scale-95 transition-all"
+            >
+              හරි, තේරුණා
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

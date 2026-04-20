@@ -201,7 +201,11 @@ export default function LessonsPage() {
               </svg>
             </div>
             <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight mb-4">Verification Underway</h3>
-            <p className="text-sm font-semibold text-[#1A5683] mb-8 bg-[#F0F5FA] p-5 rounded-2xl leading-relaxed">We are currently auditing your payment slip. The lesson content will be available as soon as our team confirms the transaction.</p>
+            <p className="text-sm font-semibold text-[#1A5683] mb-8 bg-[#F0F5FA] p-5 rounded-2xl leading-relaxed">We are currently auditing your payment slip. The lesson content will be available as soon as our team confirms the transaction.
+              <span className="block mt-3 text-xs  leading-loose">
+            අප දැනට ඔබගේ ගෙවීම් පත්‍රිකාව පරීක්ෂා කරමින් සිටිමු. අපගේ කණ්ඩායම ගනුදෙනුව තහවුරු කළ වහාම ඔබට පාඩම් අන්තර්ගතය ලබා ගත හැකි වනු ඇත
+            </span>
+            </p>
             <button onClick={() => setShowPendingModal(false)} className="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl text-[13px] uppercase tracking-widest hover:bg-[#1A5783] transition-all shadow-xl">Back to Lessons</button>
           </div>
         </div>

@@ -296,8 +296,13 @@ export default function LessonDetailPage() {
                     <Info size={16} />
                     <p className="font-bold text-[12px] uppercase">Playback Security</p>
                 </div>
-                <p className="text-orange-700/70 text-[11px] font-medium leading-snug">
-                    This video is set to private. If you see an access error, ensure you are logged into your Google account in this browser.
+                <p className="text-orange-700/70 text-[12px] font-medium leading-snug">
+                Each video part is limited to 3 views. Closing the tab or refreshing will count as a view.<br></br> <span className="text-orange-700/70 text-[12px] font-medium leading-snug">
+                    This video is set to private. If you see an access error, ensure you are logged into your Google account in this browser.</span>
+                    <br></br> <span className="text-orange-700/70 text-[12px] font-medium leading-snug">
+                  සෑම වීඩියෝ කොටසකටම නැරඹීම් වාර 3කට පමණක් සීමා වේ. tab වසා දැමීම හෝ පිටුව නැවත refresh කිරීමද එක් නැරඹීමක් ලෙස ගණනය කරනු ලබනව.</span>
+                  <br></br> <span className="text-orange-700/70 text-[12px] font-medium leading-snug">
+                  මෙම වීඩියෝව පෞද්ගලික ලෙස සකසා ඇත. ඔබට ප්‍රවේශ දෝෂයක් පෙනෙන්නේ නම්, ඔබ මෙම බ්‍රව්සරයේ ඔබගේ Google ගිණුමට පුරනය වී ඇති බවට වග බලා ගන්න.</span>
                 </p>
               </div>
             </div>

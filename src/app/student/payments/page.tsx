@@ -150,6 +150,7 @@ function PaymentsContent() {
         </h1>
         <p className="text-[#526070] text-base mt-3 leading-relaxed">
           Securely upload your tuition fee receipts. Our academic team will verify the <br></br> transaction within 24-48 business hours.
+          <br></br><span className="block mt-2 mb-3 text-sm">ඔබගේ {billingMonth} මාසයට අදාළ ගෙවීම් රිසිට්පත සාර්ථකව උඩුගත කර ඇති අතර එය දැන් පරීක්ෂාවට ලක් වෙමින් පවතී.</span>
         </p>
       </div>
 
@@ -317,6 +318,11 @@ function PaymentsContent() {
             <p className="text-base mt-3 leading-relaxed text-[#3E3C63CC]">
               Please ensure the reference number  and date of transaction are clearly 
               visible on the slip. Incomplete or  blurred images may lead to a delay in  access to course materials.
+              <br></br>
+              <span className="block mt-3 text-sm">
+              කරුණාකර ගනුදෙනු අංකය සහ ගනුදෙනු දිනය රිසිට්පතේ පැහැදිලිව පෙනෙන ලෙස සලස්වන්න.
+              අසම්පූර්ණ හෝ පැහැදිලි නොවන රිසිට්පත් හේතුවෙන් පාඨමාලා ද්‍රව්‍ය වෙත ප්‍රවේශය ප්‍රමාද විය හැක.
+              </span>
             </p>
           </div>
         </div>
@@ -338,6 +344,8 @@ function PaymentsContent() {
                 <p className="font-semibold text-sm text-gray-800 leading-tight">Immediate Acknowledgment</p>
                 <p className="text-sm text-gray-500 mt-1 leading-relaxed">
                   You&apos;ll receive an email confirmation immediately after submission.
+                   <br></br><span className="block mt-1 text-xs">
+                    ඉදිරිපත් කිරීමෙන් පසු ඔබට වහාම විද්‍යුත් තැපැල් තහවුරු කිරීමක් ලැබෙනු ඇත.</span>
                 </p>
               </div>
             </div>
@@ -355,6 +363,8 @@ function PaymentsContent() {
                 </p>
                 <p className="text-sm text-gray-500 mt-1 leading-relaxed">
                   Our finance team audits payments every morning at 9:00 AM.
+                  <br></br><span className="block mt-1 text-xs">
+                    අපගේ මූල්‍ය කණ්ඩායම සෑම උදෑසනකම පෙ.ව. 9:00 ට ගෙවීම් පරීක්ෂා කරයි.</span>
                 </p>
               </div>
             </div>
@@ -374,6 +384,8 @@ function PaymentsContent() {
                 </p>
                 <p className="text-sm text-gray-500 mt-1 leading-relaxed">
                   Once verified, your dashboard materials will unlock automatically.
+                   <br></br><span className="block mt-1 text-xs">
+                    සත්‍යාපනය කළ පසු, ඔබගේ materials ස්වයංක්‍රීයව විවෘත වේ.</span>
                 </p>
               </div>
             </div>
