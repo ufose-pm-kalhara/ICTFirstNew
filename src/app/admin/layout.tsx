@@ -41,15 +41,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] font-sans text-slate-900">
       {/* Sidebar */}
-      <aside className="w-72 bg-white border-r border-slate-100 flex flex-col fixed h-full z-50">
+      <aside className="w-72 bg-white border-r border-slate-100 flex flex-col fixed h-screen z-50">
         
-        {/* Brand Logo */}
-        <div className="pt-8 pb-10 px-8">
+        {/* Brand Logo - Static */}
+        <div className="pt-8 pb-10 px-8 shrink-0">
           <h2 className="text-2xl font-black text-[#2B6390] tracking-tight">ICTFIRST.lk</h2>
         </div>
 
-        {/* Profile Card */}
-        <div className="px-6 mb-8">
+        {/* Profile Card - Static */}
+        <div className="px-6 mb-8 shrink-0">
           <div className="bg-[#F0F7FF] rounded-[2rem] p-4 flex items-center gap-4 border border-[#E1EFFE]">
             <div className="w-12 h-12 bg-[#93C5FD] rounded-2xl flex items-center justify-center text-white shadow-sm">
               <GraduationCap size={24} />
@@ -61,8 +61,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-grow px-4 space-y-2">
+        {/* Navigation - Now Scrollable if screen is small */}
+        <nav className="flex-grow px-4 space-y-2 overflow-y-auto custom-scrollbar">
           {menuItems.map((item) => {
             const isActive = pathname === item.path;
             return (
@@ -80,7 +80,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </span>
                 <span className="text-[15px] font-semibold">{item.name}</span>
                 
-                {/* Active Indicator Line (From Image) */}
                 {isActive && (
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#2563EB] rounded-l-full" />
                 )}
@@ -89,8 +88,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        {/* Bottom Actions */}
-        <div className="mt-auto p-6 space-y-2">
+        {/* Bottom Actions - Pinned and won't disappear */}
+        <div className="mt-auto p-6 space-y-2 shrink-0 bg-white border-t border-slate-50">
           <Link 
             href="mailto:ufosesoftwareceo@gmail.com"
             className="w-full flex items-center gap-4 px-6 py-3 text-[#64748B] text-[15px] font-semibold hover:text-slate-900 transition-colors"
