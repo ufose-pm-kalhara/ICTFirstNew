@@ -48,7 +48,6 @@ export default function ContentManagement() {
     existingFiles: [] as { id: number; label: string }[],
   });
 
-  // --- NEW: Reset Form Helper ---
   const resetForm = () => {
     setEditingId(null);
     setForm({
@@ -85,13 +84,19 @@ export default function ContentManagement() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
-      const maxSize = 3 * 1024 * 1024; // 3MB in bytes
       
-      // Filter out files larger than 3MB
+      /**
+       * LIMIT ADJUSTED:
+       * MySQL's max_allowed_packet includes the entire SQL string.
+       * When a Buffer is sent in a query, it is often hex-encoded, doubling its size.
+       * 1.5MB file -> ~3MB Hex String + Query overhead.
+       */
+      const maxSize = 1.5 * 1024 * 1024; 
+      
       const validFiles = filesArray.filter(f => f.size <= maxSize);
       
       if (validFiles.length < filesArray.length) {
-        alert("Some files were rejected because they exceed the 3MB size limit.");
+        alert("Some files were rejected. To prevent database errors, files must be under 1.5MB.");
       }
 
       const newFiles = validFiles.map(f => ({ file: f, label: f.name }));
@@ -158,13 +163,13 @@ export default function ContentManagement() {
       if (res.ok) {
         setIsFormOpen(false);
         fetchLessons();
-        alert(editingId ? "Changes saved successfully!" : "New lesson and materials added successfully to the database!");
+        alert(editingId ? "Changes saved successfully!" : "New lesson added successfully!");
       } else {
         const errorData = await res.json();
-        alert(`Error: ${errorData.message || "Failed to save content."}`);
+        alert(`Error: ${errorData.message || "Failed to save content. The file might be too large for the server."}`);
       }
     } catch (err) {
-      alert("A network error occurred. Please check the file sizes and try again.");
+      alert("A network error occurred. Please ensure files are small and try again.");
     }
   };
 
@@ -176,7 +181,7 @@ export default function ContentManagement() {
           <p className="text-slate-500 font-medium mt-1">Manage and publish learning materials for students.</p>
         </div>
         <button 
-          onClick={() => { resetForm(); setIsFormOpen(true); }} // Updated to call resetForm
+          onClick={() => { resetForm(); setIsFormOpen(true); }}
           className="bg-[#2563EB] text-white px-6 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 hover:bg-blue-700 transition-all shadow-md shadow-blue-100"
         >
           <Plus size={18} />
@@ -285,7 +290,7 @@ export default function ContentManagement() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <label className="text-[11px] font-bold uppercase text-blue-600 tracking-wider flex items-center gap-2">
-                    <FileText size={14} /> Learning Materials (Max 3MB per PDF)
+                    <FileText size={14} /> Learning Materials (Max 1.5MB per PDF)
                   </label>
                   <label className="text-[11px] font-bold text-slate-400 cursor-pointer hover:text-blue-600 transition-colors uppercase tracking-widest flex items-center gap-1">
                     <UploadCloud size={14} /> Upload PDF

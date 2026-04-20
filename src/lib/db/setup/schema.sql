@@ -188,3 +188,5 @@ ADD COLUMN class_date DATE,
 ADD COLUMN class_time TIME;
 
 ALTER TABLE live_links MODIFY class_date VARCHAR(10);
+
+SET GLOBAL max_allowed_packet = 16777216;
