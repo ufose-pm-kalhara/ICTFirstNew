@@ -12,7 +12,6 @@ interface Student {
   profile_image: string | null;
 }
 
-// Reusable Action Buttons to avoid code duplication
 const ActionButtons = ({ isMobile = false, onUpdateProfile }: { isMobile?: boolean; onUpdateProfile: () => void }) => (
   <div className={`flex flex-col sm:flex-row justify-center items-center gap-5 ${isMobile ? 'mt-10 lg:hidden' : 'mt-16 hidden lg:flex'}`}>
     <button 
@@ -53,15 +52,21 @@ export default function StudentProfile() {
       .catch(() => setLoading(false));
   }, []);
 
+  // Validation Helper
+  const rules = {
+    length: newPassword.length >= 8,
+    upper: /[A-Z]/.test(newPassword),
+    lower: /[a-z]/.test(newPassword),
+    number: /[0-9]/.test(newPassword),
+    match: newPassword !== '' && newPassword === confirmPassword
+  };
+
   const handleUpdateProfile = async () => {
     if (!student) return;
-
-    // VALIDATION: Ensure phone number is exactly 10 digits before submitting
     if (student.phone.length !== 10) {
       alert("Please enter a valid 10-digit mobile number.");
       return;
     }
-
     const res = await fetch('/api/student/profile', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -75,10 +80,11 @@ export default function StudentProfile() {
   };
 
   const handleUpdatePassword = async () => {
-    if (newPassword !== confirmPassword) {
-      alert("Passwords do not match!");
+    if (!Object.values(rules).every(Boolean)) {
+      alert("Please fulfill all password requirements.");
       return;
     }
+
     setPassLoading(true);
     const res = await fetch('/api/student/profile/password', {
       method: 'POST',
@@ -129,6 +135,7 @@ export default function StudentProfile() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          {/* Left Column: Identity & Contact */}
           <div className="bg-white lg:bg-transparent rounded-[2.5rem] lg:rounded-none shadow-sm lg:shadow-none border border-slate-100 lg:border-none overflow-hidden">
             <div className="space-y-0 lg:space-y-10">
               <section className="bg-white lg:rounded-[2.5rem] p-10 lg:shadow-sm lg:border border-slate-100">
@@ -182,9 +189,8 @@ export default function StudentProfile() {
                       <input 
                         type="text" 
                         value={student.phone}
-                        // RESTRICTION LOGIC: Only allow digits and max length of 10
                         onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, ''); // Remove non-numeric characters
+                          const val = e.target.value.replace(/\D/g, ''); 
                           if (val.length <= 10) {
                             setStudent({...student, phone: val});
                           }
@@ -201,6 +207,7 @@ export default function StudentProfile() {
             </div>
           </div>
 
+          {/* Right Column: Security */}
           <div>
             <section className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 h-full">
               <h3 className="font-black text-slate-800 mb-10 flex items-center gap-3 uppercase text-[13px] tracking-wider italic">
@@ -220,12 +227,12 @@ export default function StudentProfile() {
                     {showCurrent ? '🔒' : '👁️'}
                   </button>
                 </div>
-                {/* ... (Other password fields remain exactly the same) */}
+                
                 <div className="relative">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">New Password</label>
                   <input 
                     type={showNew ? "text" : "password"} 
-                    placeholder="Minimum 8 characters"
+                    placeholder="Create a strong password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="w-full p-4.5 pr-14 bg-slate-50 rounded-2xl outline-none focus:ring-4 focus:ring-[#1A5783]/5 font-bold text-slate-700 transition-all border border-transparent focus:border-[#1A5783]/10"
@@ -234,6 +241,7 @@ export default function StudentProfile() {
                     {showNew ? '🔒' : '👁️'}
                   </button>
                 </div>
+
                 <div className="relative">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Verify New Password</label>
                   <input 
@@ -247,10 +255,32 @@ export default function StudentProfile() {
                     {showConfirm ? '🔒' : '👁️'}
                   </button>
                 </div>
+
+                {/* Password Rules List */}
+                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-3">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Security Requirements:</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {[
+                      { label: "8+ Characters", met: rules.length },
+                      { label: "Uppercase (A-Z)", met: rules.upper },
+                      { label: "Lowercase (a-z)", met: rules.lower },
+                      { label: "Number (0-9)", met: rules.number },
+                      { label: "Passwords Match", met: rules.match },
+                    ].map((rule, i) => (
+                      <div key={i} className={`flex items-center gap-2 text-[11px] font-bold transition-all duration-300 ${rule.met ? 'text-emerald-500 translate-x-1' : 'text-slate-400'}`}>
+                        <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] border ${rule.met ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200 text-transparent'}`}>
+                          ✓
+                        </span>
+                        {rule.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <button 
                   onClick={handleUpdatePassword}
                   disabled={passLoading}
-                  className="w-full py-4.5 bg-[#1A5783] text-white rounded-2xl font-bold text-[13px] uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-xl shadow-blue-900/10 active:scale-[0.98] mt-4"
+                  className="w-full py-4.5 bg-[#1A5783] text-white rounded-2xl font-bold text-[13px] uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-xl shadow-blue-900/10 active:scale-[0.98] mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {passLoading ? 'Syncing...' : 'Update Password'} <span>🔄</span>
                 </button>
