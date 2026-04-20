@@ -137,8 +137,13 @@ export default function StudentDashboard() {
   const liveAccessStatus = liveSession ? getLessonStatus(liveSession.lesson_id) : 'no_history';
   const hasLiveAccess = liveAccessStatus === 'approved';
 
+  // Memoized sorting by latest date first
   const { unlockedLessons, lockedLessons } = useMemo(() => {
-    return lessons.reduce(
+    const sortedLessons = [...lessons].sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    return sortedLessons.reduce(
       (acc, lesson) => {
         const status = getLessonStatus(lesson.id);
         if (status === 'approved') acc.unlockedLessons.push(lesson);
@@ -283,7 +288,7 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* RECENTLY UNLOCKED SECTION - Limited to 4 cards */}
+      {/* RECENTLY UNLOCKED SECTION */}
       {unlockedLessons.length > 0 && (
         <div className="mb-12 md:mb-16">
           <div className="flex items-center justify-between mb-6 md:mb-8">
@@ -304,14 +309,25 @@ export default function StudentDashboard() {
         </div>
       )}
 
+      {/* LOCKED MATERIALS SECTION - Now sliced to 4 with View All link */}
       <div className="mb-10 md:mb-12">
-        <div className="flex items-center gap-3 mb-6 md:mb-8">
-          <div className="h-5 md:h-6 w-1 rounded-full bg-slate-300"></div>
-          <h2 className="text-[12px] md:text-[14px] font-bold uppercase tracking-[0.2em] text-slate-500">Locked Materials</h2>
+        <div className="flex items-center justify-between mb-6 md:mb-8">
+          <div className="flex items-center gap-3">
+            <div className="h-5 md:h-6 w-1 rounded-full bg-slate-300"></div>
+            <h2 className="text-[12px] md:text-[14px] font-bold uppercase tracking-[0.2em] text-slate-500">Locked Materials</h2>
+          </div>
+          {lockedLessons.length > 4 && (
+            <Link 
+              href="/student/lessons" 
+              className="text-[11px] md:text-[12px] font-black text-[#1A5783] uppercase tracking-widest hover:translate-x-1 transition-transform flex items-center gap-2"
+            >
+              View All <span>→</span>
+            </Link>
+          )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {lockedLessons.length > 0 ? (
-            lockedLessons.map((lesson) => <LessonCard key={lesson.id} lesson={lesson} />)
+            lockedLessons.slice(0, 4).map((lesson) => <LessonCard key={lesson.id} lesson={lesson} />)
           ) : unlockedLessons.length === 0 ? (
             <div className="col-span-full text-center py-16 md:py-24 bg-slate-50 rounded-[2.5rem] md:rounded-[3rem] border border-slate-100 px-4">
               <p className="text-slate-400 font-bold text-[14px] md:text-[15px]">No lessons available yet</p>

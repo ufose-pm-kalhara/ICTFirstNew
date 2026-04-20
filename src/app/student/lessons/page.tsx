@@ -102,8 +102,11 @@ export default function LessonsPage() {
     });
   };
 
+  // UPDATED: Unlocked lessons sorted latest to old
   const unlockedLessons = useMemo(() => {
-    return lessons.filter(l => checkAccess(l.id) === 'approved');
+    return lessons
+      .filter(l => checkAccess(l.id) === 'approved')
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [lessons, paymentMap, generalStatus]);
 
   const filteredAndSorted = useMemo(() => {
@@ -242,11 +245,12 @@ export default function LessonsPage() {
           </div>
         </div>
 
+        {/* Section: Latest Unlocked Lessons */}
         {unlockedLessons.length > 0 && sortBy !== 'favorites' && (
           <div className="mb-20">
             <div className="flex items-center gap-3 mb-8">
               <div className="h-6 w-1 rounded-full bg-green-500"></div>
-              <h2 className="text-[14px] font-bold uppercase tracking-widest text-slate-800">My Unlocked Lessons</h2>
+              <h2 className="text-[14px] font-bold uppercase tracking-widest text-slate-800">Latest Unlocked Lessons</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {unlockedLessons.map(lesson => (
@@ -259,7 +263,7 @@ export default function LessonsPage() {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
           <div>
             <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">
-                {sortBy === 'favorites' ? '❤️ My Bookmarks' : (selectedGrade ? `Grade ${selectedGrade} Content` : 'All Available Modules')}
+                {sortBy === 'favorites' ? '❤️ My Bookmarks' : (selectedGrade ? `Grade ${selectedGrade} Modules` : 'All Available Modules')}
             </h2>
           </div>
 
@@ -284,6 +288,7 @@ export default function LessonsPage() {
           </div>
         </div>
 
+        {/* Section: All Modules (Locked + Unlocked filtered by grade/search) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {filteredAndSorted.length > 0 ? (
             filteredAndSorted.map((lesson) => (
